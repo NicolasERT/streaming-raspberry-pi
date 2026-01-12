@@ -80,10 +80,19 @@ done
 
 # 4. Configurar MediaMTX
 if [ -f "$REPO_DIR/docker-compose.yml" ]; then
+    echo "🐳 Verificando contenedor MediaMTX..."
     cp "$REPO_DIR/docker-compose.yml" "$INSTALL_DIR/"
     chown "$USER_NAME:$USER_NAME" "$INSTALL_DIR/docker-compose.yml"
-    cd "$INSTALL_DIR" && sudo docker compose up -d
-    cd "$REPO_DIR"
+    
+    # Comprobar si el contenedor ya existe (en cualquier estado: corriendo o detenido)
+    if [ ! "$(sudo docker ps -a -q -f name=mediamtx)" ]; then
+        echo "📦 Desplegando nuevo contenedor MediaMTX..."
+        cd "$INSTALL_DIR" && sudo docker compose up -d
+        cd "$REPO_DIR"
+    else
+        echo "✅ El contenedor MediaMTX ya existe. Asegurando que esté iniciado..."
+        sudo docker start mediamtx
+    fi
 fi
 
 # 5. Instalar y Personalizar Servicio de Systemd
