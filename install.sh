@@ -59,7 +59,7 @@ done
 if [ -f "$REPO_DIR/docker-compose.yml" ]; then
     cp "$REPO_DIR/docker-compose.yml" "$INSTALL_DIR/"
     chown "$USER_NAME:$USER_NAME" "$INSTALL_DIR/docker-compose.yml"
-    cd "$INSTALL_DIR" && sudo docker-compose up -d
+    cd "$INSTALL_DIR" && sudo docker compose up -d
     cd "$REPO_DIR"
 fi
 
