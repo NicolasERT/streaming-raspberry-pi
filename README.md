@@ -35,7 +35,8 @@ chmod +x install.sh && ./install.sh
 | -b	| Identificador del Bus USB para reset (Bus-Puerto)	| 5-1 |
 | -s	| Resolución	| 1920x1080 |
 | -f	| Framerate	| 60 |
-
+| -T	| Límite de temperatura (°C)	| 75 |
+| -S	| Nombre del servicio a detener	| streaming-tv.service |
 
 ## 🛠️ Componentes Incluidos
 
@@ -45,6 +46,8 @@ El sistema se basa en cuatro archivos principales que trabajan en conjunto para 
 *   **`streaming-tv.service`**: Unidad de configuración para `systemd`. Permite que el streaming funcione como un servicio del sistema, facilitando su gestión (encendido/apagado) desde paneles externos como Cockpit.
 *   **`docker-compose.yml`**: Define el contenedor de **MediaMTX**. Actúa como el servidor de medios que recibe la señal RTMP y la convierte automáticamente a WebRTC y HLS para su visualización en navegadores.
 *   **`install.sh`**: Script de automatización que instala todas las dependencias necesarias, configura los permisos de Docker y despliega los archivos anteriores en sus rutas correctas.
+*   **`thermal-monitor.sh`**: Script centinela que supervisa la temperatura de la CPU en tiempo real. Actúa como un sistema de protección activa que detiene automáticamente el servicio de streaming si se alcanza el umbral de seguridad configurado, evitando el sobrecalentamiento y el thermal throttling.
+*   **`thermal-monitor.service`**: Servicio de sistema encargado de mantener el monitor térmico funcionando permanentemente en segundo plano desde el arranque. Su estado y registros de actividad pueden ser monitoreados directamente desde Cockpit.
 
 ## 📱 Control y Visualización
 
