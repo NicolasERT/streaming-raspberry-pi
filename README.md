@@ -24,15 +24,15 @@ chmod +x install.sh && ./install.sh
 ```
 
 ### Parámetros Disponibles
-|Flag|Descripción|Valor por defecto|
-|-|-|
-|-u	|Usuario del sistema que ejecutará el servicio	|nicolasrt|
-|-m	|Modo de transmisión (RTMP o UDP)	|RTMP|
-|-n	|Nombre del dispositivo de audio (ALSA)	|USB3.0 Video|
-|-i	|IP de destino (Solo necesario para modo UDP)	|192.168.68.56|
-|-r	|URL del servidor RTMP	|rtmp://127.0.0.1:1935/live/stream|
-|-v	|Ruta del dispositivo de video	|/dev/video0|
-|-b	|Identificador del Bus USB para reset (Bus-Puerto)	|5-1|
+| Flag | Descripción | Valor por defecto |
+| - | - | - |
+| -u	| Usuario del sistema que ejecutará el servicio	| nicolasrt |
+| -m	| Modo de transmisión (RTMP o UDP) | RTMP |
+| -n	| Nombre del dispositivo de audio (ALSA)	| USB3.0 Video |
+| -i	| IP de destino (Solo necesario para modo UDP)	| 192.168.68.56 |
+| -r	| URL del servidor RTMP	| rtmp://127.0.0.1:1935/live/stream |
+| -v	| Ruta del dispositivo de video	| /dev/video0 |
+| -b	| Identificador del Bus USB para reset (Bus-Puerto)	| 5-1 |
 
 ## 🛠️ Componentes Incluidos
 
