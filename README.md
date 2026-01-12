@@ -1,92 +1,71 @@
-🛠️ MANUAL DE INSTALACIÓN: SISTEMA STREAMING-TV (NicolasRT)
-Este documento detalla la configuración de la Raspberry Pi 5 para la captura y transmisión de audio/video profesional.
-1. REQUISITOS PREVIOS
-Instalar las herramientas de gestión de video, audio y el panel de control:
-bash
-sudo apt update
-sudo apt install ffmpeg v4l-utils alsa-utils cockpit cockpit-pcp -y
-Usa el código con precaución.
+# 📹 Sistema de Streaming TV (NicolasRT)
 
-2. SERVIDOR DE MEDIOS (DOCKER)
-Utilizamos MediaMTX para distribuir el video a la red y permitir visualización web.
-Archivo: docker-compose.yml
-yaml
-services:
-  mediamtx:
-    image: bluenviron/mediamtx
-    container_name: mediamtx
-    restart: always
-    ports:
-      - "1935:1935" # RTMP Entrada
-      - "8888:8888" # HLS Web
-      - "8889:8889" # WebRTC Web (Baja latencia)
-Usa el código con precaución.
+Este proyecto permite capturar video y audio de una cámara USB 3.0 en una Raspberry Pi 5 y transmitirlo a la red local mediante RTMP, permitiendo visualización en navegadores (WebRTC), VLC u OBS.
 
-Comando para iniciar: sudo docker compose up -d
-3. EL SCRIPT DE CONTROL
-Este archivo gestiona el hardware y la codificación del stream.
-Archivo: /home/nicolasrt/streaming-tv.sh
-bash
-#!/bin/bash
-# Limpiar procesos bloqueados
-trap "sudo fuser -k /dev/video0; exit" SIGINT SIGTERM
-sudo fuser -k /dev/video0 2>/dev/null
+## ⚙️ Descripción Técnica de Software
 
-# Reset Eléctrico del Puerto USB 3.0 (Bus 5, Puerto 1)
-echo '5-1' | sudo tee /sys/bus/usb/drivers/usb/unbind > /dev/null
-sleep 2
-echo '5-1' | sudo tee /sys/bus/usb/drivers/usb/bind > /dev/null
-sleep 2
+El ecosistema se apoya en tres pilares de software de alto rendimiento para garantizar estabilidad y baja latencia:
 
-# Detección automática de ID de Audio
-CARD_NUM=$(arecord -l | grep "USB3.0 Video" | awk '{print $2}' | tr -d ':')
+*   **[FFmpeg](ffmpeg.org):** Es el motor de procesamiento multimedia. Se encarga de capturar el video crudo desde la cámara (`V4L2`) y el audio desde el micrófono (`ALSA`), comprimirlos usando el códec H.264 (video) y AAC (audio), y empaquetarlos en un flujo RTMP en tiempo real.
+*   **[MediaMTX](github.com):** Un servidor de medios (media proxy) de alto rendimiento escrito en Go. Actúa como el receptor central de la señal; permite que un solo flujo de entrada sea consumido simultáneamente por múltiples clientes a través de diversos protocolos como WebRTC, HLS y RTSP sin necesidad de recodificar.
+*   **[Cockpit](cockpit-project.org):** Una interfaz gráfica basada en web para servidores Linux. Proporciona una capa de abstracción sobre `systemd`, permitiendo que el usuario inicie, detenga o monitoree los logs del servicio `streaming-tv` de forma visual y segura desde cualquier navegador, eliminando la necesidad de comandos manuales por SSH.
 
-# Activar Micrófono
-if [ ! -z "$CARD_NUM" ]; then
-    amixer -c $CARD_NUM cset numid=2 on > /dev/null
-fi
+## 🚀 Instalación Rápida
 
-# Lanzar FFmpeg (Ajustado para Audio Mono y Estabilidad)
-ffmpeg -f alsa -ac 1 -i plughw:$CARD_NUM,0 -f v4l2 -input_format mjpeg -video_size 1280x720 -framerate 30 -i /dev/video0 \
--c:v libx264 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -flags +global_header \
--x264-params "keyint=30:min-keyint=30:scenecut=0" -b:v 1500k \
--c:a aac -b:a 128k -ar 44100 -af "aresample=async=1,asetpts=N/SR/TB,volume=15dB" \
--f flv "rtmp://127.0.0.1:1935/live/stream"
-Usa el código con precaución.
+Para configurar este sistema en una nueva Raspberry Pi, clona este repositorio y ejecuta el script de instalación automática:
 
-Permisos: chmod +x /home/nicolasrt/streaming-tv.sh
-4. EL SERVICIO DE SISTEMA
-Permite gestionar el stream desde Cockpit.
-Archivo: /etc/systemd/system/streaming-tv.service
-ini
-[Unit]
-Description=Servicio Streaming TV NicolasRT
-After=network.target mediamtx.service
+```bash
+# Clonar el repositorio
+git clone git@github.com:tu-usuario/tu-repo.git
+cd tu-repo
 
-[Service]
-ExecStart=/home/nicolasrt/streaming-tv.sh
-Restart=always
-RestartSec=5
-User=nicolasrt
+# Ejecutar el instalador
+chmod +x install.sh
+./install.sh
+```
 
-[Install]
-WantedBy=multi-user.target
-Usa el código con precaución.
+## 🛠️ Componentes Incluidos
 
-Comandos de instalación:
-bash
-sudo systemctl daemon-reload
-sudo systemctl enable streaming-tv.service
-Usa el código con precaución.
+El sistema se basa en cuatro archivos principales que trabajan en conjunto para garantizar la estabilidad de la transmisión:
 
-5. RECEPTOR EN WINDOWS (.BAT)
-Crea un archivo llamado Ver_Camara.bat en tu escritorio:
-batch
-@echo off
-ffplay -i "rtmp://IP_DE_LA_PI:1935/live/stream" -fflags nobuffer -flags low_delay -probesize 1000000 -sync ext
-Usa el código con precaución.
+*   **`streaming-tv.sh`**: Script de Bash que realiza el mantenimiento del hardware (reset del bus USB 3.0), detecta dinámicamente la tarjeta de sonido y lanza el proceso de codificación con FFmpeg.
+*   **`streaming-tv.service`**: Unidad de configuración para `systemd`. Permite que el streaming funcione como un servicio del sistema, facilitando su gestión (encendido/apagado) desde paneles externos como Cockpit.
+*   **`docker-compose.yml`**: Define el contenedor de **MediaMTX**. Actúa como el servidor de medios que recibe la señal RTMP y la convierte automáticamente a WebRTC y HLS para su visualización en navegadores.
+*   **`install.sh`**: Script de automatización que instala todas las dependencias necesarias, configura los permisos de Docker y despliega los archivos anteriores en sus rutas correctas.
 
-6. MANTENIMIENTO Y CONTROL
-Acceso Web: https://IP_DE_LA_PI:9090 (Panel Cockpit para Start/Stop).
-Ver Cámara en Navegador: http://IP_DE_LA_PI:8889/live/stream.
-Ver logs de errores: journalctl -u streaming-tv.service -f.
+## 📱 Control y Visualización
+
+| Función	Dirección | URL |
+|--------------|--------------|
+| Control On/Off | https://IP_DE_LA_PI:9090 (Panel Cockpit) |
+| Ver en Web | http://IP_DE_LA_PI:8889/live/stream |
+| Ver en VLC | rtmp://IP_DE_LA_PI:1935/live/stream |
+
+## 🔧 Gestión del Sistema
+Para el mantenimiento y monitoreo del servicio a través de la terminal, utiliza los siguientes comandos:
+
+* Ver logs en tiempo real:
+```bash
+journalctl -u streaming-tv.service -f
+```
+
+* Reiniciar manualmente el stream:
+```bash
+sudo systemctl restart streaming-tv.service
+```
+
+* Detener la transmisión:
+```bash
+sudo systemctl stop streaming-tv.service
+```
+
+* Verificar estado de los contenedores (MediaMTX):
+```bash
+sudo docker ps
+```
+
+* Diagnóstico de hardware (Cámara y Audio):
+```bash
+v4l2-ctl --list-devices
+arecord -l
+```
