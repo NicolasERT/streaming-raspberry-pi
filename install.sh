@@ -1,4 +1,3 @@
-#!/bash/bin
 #!/bin/bash
 
 # --- VALORES POR DEFECTO PARA LA INSTALACIÓN ---
