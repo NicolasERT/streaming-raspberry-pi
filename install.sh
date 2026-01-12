@@ -15,6 +15,10 @@ U_BUS="5-1"
 SIZE="1920x1080"
 FPS="60"
 
+# Parámetros Monitor Térmico
+TEMP_LIMIT="75"
+MONITOR_SERVICE="streaming-tv.service"
+
 # Procesar parámetros nombrados
 while getopts "u:m:n:i:r:v:b:" opt; do
   case $opt in
@@ -27,6 +31,8 @@ while getopts "u:m:n:i:r:v:b:" opt; do
     b) U_BUS="$OPTARG" ;;         # Bus USB
     s) SIZE="$OPTARG" ;;          # Resolución (ej. 1920x1080)
     f) FPS="$OPTARG" ;;           # FPS (ej. 60)
+    T) TEMP_LIMIT="$OPTARG" ;;     # Límite temperatura
+    S) MONITOR_SERVICE="$OPTARG" ;; # Servicio a vigilar
     \?) echo "Uso: ./install.sh -u usuario -m MODO -n NAME ..."; exit 1 ;;
   esac
 done
@@ -41,12 +47,14 @@ sudo apt update && sudo apt install -y ffmpeg v4l-utils alsa-utils cockpit docke
 # 2. Permisos Docker
 sudo usermod -aG docker "$USER_NAME"
 
-# 3. Copiar Script de Ejecución
-if [ -f "$REPO_DIR/streaming-tv.sh" ]; then
-    cp "$REPO_DIR/streaming-tv.sh" "$INSTALL_DIR/"
-    chmod +x "$INSTALL_DIR/streaming-tv.sh"
-    chown "$USER_NAME:$USER_NAME" "$INSTALL_DIR/streaming-tv.sh"
-fi
+# 3. Configurar Scripts
+for script in "streaming-tv.sh" "thermal-monitor.sh"; do
+    if [ -f "$REPO_DIR/$script" ]; then
+        cp "$REPO_DIR/$script" "$INSTALL_DIR/"
+        chmod +x "$INSTALL_DIR/$script"
+        chown "$USER_NAME:$USER_NAME" "$INSTALL_DIR/$script"
+    fi
+done
 
 # 4. Configurar MediaMTX
 if [ -f "$REPO_DIR/docker-compose.yml" ]; then
@@ -70,6 +78,17 @@ if [ -f "$REPO_DIR/streaming-tv.service" ]; then
     sudo systemctl daemon-reload
     sudo systemctl enable streaming-tv.service
     echo "✅ Servicio configurado con: $PARAMS"
+fi
+
+# Configurar thermal-monitor.service
+if [ -f "$REPO_DIR/thermal-monitor.service" ]; then
+    sudo cp "$REPO_DIR/thermal-monitor.service" /etc/systemd/system/
+    THERMAL_PARAMS="-t $TEMP_LIMIT -s $MONITOR_SERVICE"
+    sudo sed -i "s|ExecStart=.*|ExecStart=$INSTALL_DIR/thermal-monitor.sh $THERMAL_PARAMS|" /etc/systemd/system/thermal-monitor.service
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable thermal-monitor.service
+    echo "Monitor Térmico configurado a ${TEMP_LIMIT}C sobre el servicio ${MONITOR_SERVICE}."
 fi
 
 echo "---"
