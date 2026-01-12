@@ -10,19 +10,29 @@ El ecosistema se apoya en tres pilares de software de alto rendimiento para gara
 *   **[MediaMTX](github.com):** Un servidor de medios (media proxy) de alto rendimiento escrito en Go. Actúa como el receptor central de la señal; permite que un solo flujo de entrada sea consumido simultáneamente por múltiples clientes a través de diversos protocolos como WebRTC, HLS y RTSP sin necesidad de recodificar.
 *   **[Cockpit](cockpit-project.org):** Una interfaz gráfica basada en web para servidores Linux. Proporciona una capa de abstracción sobre `systemd`, permitiendo que el usuario inicie, detenga o monitoree los logs del servicio `streaming-tv` de forma visual y segura desde cualquier navegador, eliminando la necesidad de comandos manuales por SSH.
 
-## 🚀 Instalación Rápida
+## 🚀 Instalación y Despliegue Personalizado
 
-Para configurar este sistema en una nueva Raspberry Pi, clona este repositorio y ejecuta el script de instalación automática:
+El script `install.sh` ahora permite configurar todo el sistema en un solo comando mediante parámetros nombrados. Si no se pasan parámetros, el sistema usará los valores por defecto (RTMP, nicolasrt, USB3.0 Video).
 
+### Comando de instalación
 ```bash
-# Clonar el repositorio
-git clone git@github.com:tu-usuario/tu-repo.git
-cd tu-repo
+# Uso básico (Valores por defecto)
+chmod +x install.sh && ./install.sh
 
-# Ejecutar el instalador
-chmod +x install.sh
-./install.sh
+# Uso avanzado (Personalizado)
+./install.sh -u nicolasrt -m RTMP -n "USB3.0 Video" -v /dev/video0 -b 5-1
 ```
+
+### Parámetros Disponibles
+|Flag|Descripción|Valor por defecto|
+|-|-|
+|-u	|Usuario del sistema que ejecutará el servicio	|nicolasrt|
+|-m	|Modo de transmisión (RTMP o UDP)	|RTMP|
+|-n	|Nombre del dispositivo de audio (ALSA)	|USB3.0 Video|
+|-i	|IP de destino (Solo necesario para modo UDP)	|192.168.68.56|
+|-r	|URL del servidor RTMP	|rtmp://127.0.0.1:1935/live/stream|
+|-v	|Ruta del dispositivo de video	|/dev/video0|
+|-b	|Identificador del Bus USB para reset (Bus-Puerto)	|5-1|
 
 ## 🛠️ Componentes Incluidos
 
