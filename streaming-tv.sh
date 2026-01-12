@@ -39,7 +39,6 @@ if [ "$MODO" == "RTMP" ]; then
 fi
 
 # 2. Limpiar procesos y Reset Eléctrico USB
-#sudo fuser -k $VIDEO_DEV 2>/dev/null
 echo "$USB_BUS" | sudo tee /sys/bus/usb/drivers/usb/unbind > /dev/null
 sleep 2
 echo "$USB_BUS" | sudo tee /sys/bus/usb/drivers/usb/bind > /dev/null
