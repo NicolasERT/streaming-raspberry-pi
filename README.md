@@ -48,7 +48,7 @@ El sistema se basa en cuatro archivos principales que trabajan en conjunto para 
 | Función	Dirección | URL |
 |--------------|--------------|
 | Control On/Off | https://IP_DE_LA_PI:9090 (Panel Cockpit) |
-| Ver en Web | http://IP_DE_LA_PI:8889/live/stream |
+| Ver en Web | http://IP_DE_LA_PI:8888/live/stream |
 | Ver en VLC | rtmp://IP_DE_LA_PI:1935/live/stream |
 
 ## 🔧 Gestión del Sistema
