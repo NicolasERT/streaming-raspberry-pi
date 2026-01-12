@@ -8,4 +8,4 @@ services:
       - "8888:8888" # HLS (Visualización web compatible)
       - "8889:8889" # WebRTC (Visualización web latencia cero)
       - "8554:8554" # RTSP
-�
+      - "9997:9997" # Puerto para la API de control
