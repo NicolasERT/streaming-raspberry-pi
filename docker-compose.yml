@@ -3,6 +3,8 @@ services:
     image: bluenviron/mediamtx
     container_name: mediamtx
     restart: always
+    environment:
+      - MTX_API=yes
     ports:
       - "1935:1935" # RTMP (Entrada de la Pi)
       - "8888:8888" # HLS (Visualización web compatible)
