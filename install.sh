@@ -40,8 +40,31 @@ INSTALL_DIR="/home/$USER_NAME"
 
 echo "🚀 Iniciando despliegue personalizado para $USER_NAME..."
 
-# 1. Instalar dependencias
-sudo apt update && sudo apt install -y ffmpeg v4l-utils alsa-utils cockpit docker.io docker-compose
+# --- FUNCIÓN DE INSTALACIÓN INTELIGENTE ---
+install_if_missing() {
+    if ! command -v "$1" &> /dev/null; then
+        echo "📦 Instalando $1..."
+        sudo apt update && sudo apt install -y "$2"
+    else
+        echo "✅ $1 ya está instalado."
+    fi
+}
+
+# 1. Verificar dependencias una por una
+# Formato: install_if_missing "comando" "paquete_apt"
+install_if_missing "ffmpeg" "ffmpeg"
+install_if_missing "v4l2-ctl" "v4l-utils"
+install_if_missing "arecord" "alsa-utils"
+install_if_missing "cockpit" "cockpit"
+install_if_missing "docker" "docker.io"
+
+# Docker Compose es un caso especial (plugin vs standalone)
+if ! docker compose version &> /dev/null; then
+    echo "📦 Instalando Docker Compose Plugin..."
+    sudo apt update && sudo apt install -y docker-compose-v2
+else
+    echo "✅ Docker Compose ya está listo."
+fi
 
 # 2. Permisos Docker
 sudo usermod -aG docker "$USER_NAME"
