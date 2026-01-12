@@ -7,6 +7,8 @@ IP_DESTINO="192.168.68.56"
 RTMP_URL="rtmp://127.0.0.1:1935/live/stream"
 VIDEO_DEV="/dev/video0"
 USB_BUS="5-1"
+SIZE="1920x1080"
+FPS="60"
 # ---------------------------
 
 # Procesar parámetros nombrados
@@ -18,6 +20,8 @@ while getopts "m:n:i:r:v:b:" opt; do
     r) RTMP_URL="$OPTARG" ;;      # -r URL de RTMP
     v) VIDEO_DEV="$OPTARG" ;;     # -v Dispositivo de video (/dev/videoX)
     b) USB_BUS="$OPTARG" ;;       # -b Bus USB (X-X)
+    s) SIZE="$OPTARG" ;;          # -s Capturar Resolución
+    f) FPS="$OPTARG" ;;           # -f Capturar FPS
     \?) echo "Uso inválido"; exit 1 ;;
   esac
 done
@@ -57,8 +61,8 @@ else
 fi
 
 # 6. Lanzamiento de FFmpeg
-ffmpeg -f alsa -ac 1 -i plughw:$CARD_NUM,0 -f v4l2 -input_format mjpeg -video_size 1920x1080 -framerate 30 -i $VIDEO_DEV \
+ffmpeg -f alsa -ac 1 -i plughw:$CARD_NUM,0 -f v4l2 -input_format mjpeg -video_size $SIZE -framerate $FPS -i $VIDEO_DEV \
 -c:v libx264 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -flags +global_header \
--x264-params "keyint=30:min-keyint=30:scenecut=0" -b:v 1500k \
+-x264-params "keyint=$(($FPS * 1)):min-keyint=$(($FPS * 1)):scenecut=0" -b:v 4000k \
 -ar 44100 -af "aresample=async=1,asetpts=N/SR/TB,volume=15dB" \
 $OUTPUT_ARGS
