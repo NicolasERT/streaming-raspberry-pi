@@ -33,6 +33,9 @@ chmod +x install.sh && ./install.sh
 | -r	| URL del servidor RTMP	| rtmp://127.0.0.1:1935/live/stream |
 | -v	| Ruta del dispositivo de video	| /dev/video0 |
 | -b	| Identificador del Bus USB para reset (Bus-Puerto)	| 5-1 |
+| -s	| Resolución	| 1920x1080 |
+| -f	| Framerate	| 60 |
+
 
 ## 🛠️ Componentes Incluidos
 
