@@ -73,6 +73,12 @@ Ejemplo: 720p a 30fps con límite térmico de 70°C
 - **thermal-monitor.service**  
   Mantiene el monitoreo térmico activo en segundo plano desde el arranque.
 
+- **idle-monitor.sh** 
+  Script de eficiencia energética que consulta la API de MediaMTX. Si no detecta espectadores durante un tiempo determinado (parámetro -t), ordena el apagado automático del streaming.
+
+- **idle-monitor.service** 
+Servicio encargado de mantener la vigilancia de inactividad activa en segundo plano.
+
 - **docker-compose.yml**  
   Define el contenedor MediaMTX para la distribución del flujo de video.
 
