@@ -122,5 +122,23 @@ if [ -f "$REPO_DIR/thermal-monitor.service" ]; then
     echo "Monitor Térmico configurado a ${TEMP_LIMIT}C sobre el servicio ${MONITOR_SERVICE}."
 fi
 
+# --- 5. REINICIO INTELIGENTE DE SERVICIOS ---
+echo "🔄 Aplicando configuraciones y verificando estado..."
+
+for SERVICE in "streaming-tv.service" "thermal-monitor.service"; do
+    if [ -f "/etc/systemd/system/$SERVICE" ]; then
+        # Recargar systemd para que reconozca los cambios en el archivo .service
+        sudo systemctl daemon-reload
+        
+        # Verificar si el servicio ya estaba corriendo
+        if sudo systemctl is-active --quiet "$SERVICE"; then
+            echo "♻️ Reiniciando $SERVICE para aplicar nueva configuración..."
+            sudo systemctl restart "$SERVICE"
+        else
+            echo "✅ $SERVICE actualizado (estaba detenido, se mantiene detenido)."
+        fi
+    fi
+done
+
 echo "---"
 echo "✅ Instalación finalizada. Controla el servicio desde Cockpit."
