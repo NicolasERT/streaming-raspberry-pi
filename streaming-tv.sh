@@ -12,7 +12,7 @@ FPS="60"
 # ---------------------------
 
 # Procesar parámetros nombrados
-while getopts "m:n:i:r:v:b:" opt; do
+while getopts "m:n:i:r:v:b:s:f" opt; do
   case $opt in
     m) MODO="$OPTARG" ;;          # -m Modo (RTMP/UDP)
     n) DEV_NAME="$OPTARG" ;;      # -n Nombre del dispositivo
