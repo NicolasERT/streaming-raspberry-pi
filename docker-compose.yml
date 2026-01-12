@@ -1,0 +1,11 @@
+services:
+  mediamtx:
+    image: bluenviron/mediamtx
+    container_name: mediamtx
+    restart: always
+    ports:
+      - "1935:1935" # RTMP (Entrada de la Pi)
+      - "8888:8888" # HLS (Visualización web compatible)
+      - "8889:8889" # WebRTC (Visualización web latencia cero)
+      - "8554:8554" # RTSP
+�

@@ -1,0 +1,13 @@
+[Unit]
+Description=Streaming Video y Audio FFmpeg
+After=network.target
+
+[Service]
+ExecStart=/home/nicolasrt/streaming-tv.sh
+Restart=always
+RestartSec=5
+User=nicolasrt
+
+[Install]
+WantedBy=multi-user.target
+
