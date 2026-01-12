@@ -107,7 +107,7 @@ if [ -f "$REPO_DIR/streaming-tv.service" ]; then
     sudo sed -i "s|ExecStart=.*|ExecStart=$INSTALL_DIR/streaming-tv.sh $PARAMS|" /etc/systemd/system/streaming-tv.service
     
     sudo systemctl daemon-reload
-    sudo systemctl enable streaming-tv.service
+    sudo systemctl disable streaming-tv.service
     echo "✅ Servicio configurado con: $PARAMS"
 fi
 
