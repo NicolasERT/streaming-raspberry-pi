@@ -12,7 +12,7 @@ FPS="60"
 # ---------------------------
 
 # Procesar parámetros nombrados
-while getopts "m:n:i:r:v:b:s:f" opt; do
+while getopts "m:n:i:r:v:b:s:f:" opt; do
   case $opt in
     m) MODO="$OPTARG" ;;          # -m Modo (RTMP/UDP)
     n) DEV_NAME="$OPTARG" ;;      # -n Nombre del dispositivo
@@ -40,15 +40,15 @@ fi
 
 # 2. Limpiar procesos y Reset Eléctrico USB
 #sudo fuser -k $VIDEO_DEV 2>/dev/null
-#echo "$USB_BUS" | sudo tee /sys/bus/usb/drivers/usb/unbind > /dev/null
-#sleep 2
-#echo "$USB_BUS" | sudo tee /sys/bus/usb/drivers/usb/bind > /dev/null
-#sleep 2
+echo "$USB_BUS" | sudo tee /sys/bus/usb/drivers/usb/unbind > /dev/null
+sleep 2
+echo "$USB_BUS" | sudo tee /sys/bus/usb/drivers/usb/bind > /dev/null
+sleep 2
 
 # Limpiar procesos de otros servicios, pero NO el nuestro
 CURRENT_PID=$$
 # Busca quién usa la cámara y mata solo si NO es nuestro PID actual
-for pid in $(sudo fuser /dev/video0 2>/dev/null); do
+for pid in $(sudo fuser /dev/video0 2>/dev/null | xargs); do
     if [ "$pid" != "$CURRENT_PID" ]; then
         echo "Cerrando proceso externo $pid que bloqueaba la cámara..."
         sudo kill -9 "$pid"
@@ -73,6 +73,6 @@ fi
 # 6. Lanzamiento de FFmpeg
 ffmpeg -f alsa -ac 1 -i plughw:$CARD_NUM,0 -f v4l2 -input_format mjpeg -video_size $SIZE -framerate $FPS -i $VIDEO_DEV \
 -c:v libx264 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -flags +global_header \
--x264-params "keyint=$(($FPS * 1)):min-keyint=$(($FPS * 1)):scenecut=0" -b:v 4000k \
+-x264-params "keyint=$((${FPS:-60} * 1)):min-keyint=$((${FPS:-60} * 1)):scenecut=0" -b:v 4000k \
 -ar 44100 -af "aresample=async=1,asetpts=N/SR/TB,volume=15dB" \
 $OUTPUT_ARGS
