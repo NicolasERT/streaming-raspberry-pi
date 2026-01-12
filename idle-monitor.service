@@ -1,0 +1,11 @@
+[Unit]
+Description=Monitor de Inactividad para Streaming
+After=network.target mediamtx.service
+
+[Service]
+ExecStart=/home/nicolasrt/idle-monitor.sh -t 300 -s streaming-tv.service
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
