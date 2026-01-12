@@ -39,11 +39,21 @@ if [ "$MODO" == "RTMP" ]; then
 fi
 
 # 2. Limpiar procesos y Reset Eléctrico USB
-sudo fuser -k $VIDEO_DEV 2>/dev/null
-echo "$USB_BUS" | sudo tee /sys/bus/usb/drivers/usb/unbind > /dev/null
-sleep 2
-echo "$USB_BUS" | sudo tee /sys/bus/usb/drivers/usb/bind > /dev/null
-sleep 2
+#sudo fuser -k $VIDEO_DEV 2>/dev/null
+#echo "$USB_BUS" | sudo tee /sys/bus/usb/drivers/usb/unbind > /dev/null
+#sleep 2
+#echo "$USB_BUS" | sudo tee /sys/bus/usb/drivers/usb/bind > /dev/null
+#sleep 2
+
+# Limpiar procesos de otros servicios, pero NO el nuestro
+CURRENT_PID=$$
+# Busca quién usa la cámara y mata solo si NO es nuestro PID actual
+for pid in $(sudo fuser /dev/video0 2>/dev/null); do
+    if [ "$pid" != "$CURRENT_PID" ]; then
+        echo "Cerrando proceso externo $pid que bloqueaba la cámara..."
+        sudo kill -9 "$pid"
+    fi
+done
 
 # 3. Detectar Tarjeta de Sonido
 CARD_NUM=$(arecord -l | grep "$DEV_NAME" | awk '{print $2}' | tr -d ':')
