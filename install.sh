@@ -20,7 +20,7 @@ TEMP_LIMIT="75"
 MONITOR_SERVICE="streaming-tv.service"
 
 # Procesar parámetros nombrados
-while getopts "u:m:n:i:r:v:b:" opt; do
+while getopts "u:m:n:i:r:v:b:s:f:T:S" opt; do
   case $opt in
     u) USER_NAME="$OPTARG" ;;     # Usuario
     m) MODO="$OPTARG" ;;          # Modo (RTMP/UDP)
