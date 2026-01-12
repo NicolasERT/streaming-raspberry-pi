@@ -12,6 +12,8 @@ IP_DEST="192.168.68.56"
 RTMP_URL="rtmp://127.0.0.1:1935/live/stream"
 V_DEV="/dev/video0"
 U_BUS="5-1"
+SIZE="1920x1080"
+FPS="60"
 
 # Procesar parámetros nombrados
 while getopts "u:m:n:i:r:v:b:" opt; do
@@ -23,6 +25,8 @@ while getopts "u:m:n:i:r:v:b:" opt; do
     r) RTMP_URL="$OPTARG" ;;      # URL RTMP
     v) V_DEV="$OPTARG" ;;         # /dev/videoX
     b) U_BUS="$OPTARG" ;;         # Bus USB
+    s) SIZE="$OPTARG" ;;          # Resolución (ej. 1920x1080)
+    f) FPS="$OPTARG" ;;           # FPS (ej. 60)
     \?) echo "Uso: ./install.sh -u usuario -m MODO -n NAME ..."; exit 1 ;;
   esac
 done
@@ -58,7 +62,7 @@ if [ -f "$REPO_DIR/streaming-tv.service" ]; then
     
     # Inyectar parámetros en la línea ExecStart usando sed
     # Construimos la cadena de parámetros
-    PARAMS="-m $MODO -n \"$DEV_NAME\" -i $IP_DEST -r $RTMP_URL -v $V_DEV -b $U_BUS"
+    PARAMS="-m $MODO -n \"$DEV_NAME\" -i $IP_DEST -r $RTMP_URL -v $V_DEV -b $U_BUS -s $SIZE -f $FPS"
     
     sudo sed -i "s/User=.*/User=$USER_NAME/" /etc/systemd/system/streaming-tv.service
     sudo sed -i "s|ExecStart=.*|ExecStart=$INSTALL_DIR/streaming-tv.sh $PARAMS|" /etc/systemd/system/streaming-tv.service
