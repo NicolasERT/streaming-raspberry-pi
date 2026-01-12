@@ -57,7 +57,7 @@ else
 fi
 
 # 6. Lanzamiento de FFmpeg
-ffmpeg -f alsa -ac 1 -i plughw:$CARD_NUM,0 -f v4l2 -input_format mjpeg -video_size 1280x720 -framerate 30 -i $VIDEO_DEV \
+ffmpeg -f alsa -ac 1 -i plughw:$CARD_NUM,0 -f v4l2 -input_format mjpeg -video_size 1920x1080 -framerate 30 -i $VIDEO_DEV \
 -c:v libx264 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -flags +global_header \
 -x264-params "keyint=30:min-keyint=30:scenecut=0" -b:v 1500k \
 -ar 44100 -af "aresample=async=1,asetpts=N/SR/TB,volume=15dB" \
