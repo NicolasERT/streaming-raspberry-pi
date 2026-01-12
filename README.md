@@ -55,7 +55,10 @@ Ejemplo: 720p a 30fps con límite térmico de 70°C
 | -s | Resolución de video (Ancho x Alto) | 1920x1080 |
 | -f | Cuadros por segundo (FPS) | 60 |
 | -T | Límite de temperatura de CPU (°C) | 75 |
-| -S | Servicio a detener si hay sobrecalentamiento | streaming-tv.service |
+| -I | Tiempo de inactividad (segundos) para apagar el stream | 300 |
+| -S | Servicio a detener si hay sobrecalentamiento o inactividad | streaming-tv.service |
+| -p | Ruta del stream en MediaMTX que el monitor vigilará | live/stream |
+| -c | Intervalo en segundos entre cada comprobación de espectadores | 30 |
 
 ---
 

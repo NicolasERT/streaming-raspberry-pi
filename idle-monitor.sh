@@ -30,7 +30,17 @@ echo "💤 Monitor de inactividad iniciado: $STREAM_PATH | Límite: $IDLE_LIMIT 
 while true; do
     # Consultar API de MediaMTX para obtener el conteo de lectores (readers)
     # Requiere el paquete 'jq' instalado
-    READERS=$(curl -s "$API_URL" | jq -r ".items[] | select(.name==\"$STREAM_PATH\") | .readerCount" 2>/dev/null)
+    API_RESPONSE=$(curl -s "$API_URL")
+    PATH_DATA=$(echo "$API_RESPONSE" | jq -r ".items[] | select(.name==\"$STREAM_PATH\")" 2>/dev/null)
+
+    if [[ -z "$PATH_DATA" ]]; then
+        READERS=0
+    else
+        WEBRTC_COUNT=$(echo "$PATH_DATA" | jq ".webrtcSessions | length")
+        RTSP_COUNT=$(echo "$PATH_DATA" | jq ".rtspSessions | length")
+        HLS_COUNT=$(echo "$PATH_DATA" | jq ".hlsSessions | length")
+        READERS=$((WEBRTC_COUNT + RTSP_COUNT + HLS_COUNT))
+    fi
 
     # Si el stream no existe o no tiene lectores, sumamos al contador
     if [[ -z "$READERS" || "$READERS" == "0" ]]; then
