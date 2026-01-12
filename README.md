@@ -1,87 +1,115 @@
 # 📹 Sistema de Streaming TV (NicolasRT)
 
-Este proyecto permite capturar video y audio de una cámara USB 3.0 en una Raspberry Pi 5 y transmitirlo a la red local mediante RTMP, permitiendo visualización en navegadores (WebRTC), VLC u OBS.
+Este proyecto permite capturar video y audio de una cámara USB 3.0 en una **Raspberry Pi 5** y transmitirlo a la red local mediante **RTMP**, permitiendo visualización en navegadores (**WebRTC**), **VLC** u **OBS**.
+
+---
 
 ## ⚙️ Descripción Técnica de Software
 
 El ecosistema se apoya en tres pilares de software de alto rendimiento para garantizar estabilidad y baja latencia:
 
-*   **[FFmpeg](ffmpeg.org):** Es el motor de procesamiento multimedia. Se encarga de capturar el video crudo desde la cámara (`V4L2`) y el audio desde el micrófono (`ALSA`), comprimirlos usando el códec H.264 (video) y AAC (audio), y empaquetarlos en un flujo RTMP en tiempo real.
-*   **[MediaMTX](github.com):** Un servidor de medios (media proxy) de alto rendimiento escrito en Go. Actúa como el receptor central de la señal; permite que un solo flujo de entrada sea consumido simultáneamente por múltiples clientes a través de diversos protocolos como WebRTC, HLS y RTSP sin necesidad de recodificar.
-*   **[Cockpit](cockpit-project.org):** Una interfaz gráfica basada en web para servidores Linux. Proporciona una capa de abstracción sobre `systemd`, permitiendo que el usuario inicie, detenga o monitoree los logs del servicio `streaming-tv` de forma visual y segura desde cualquier navegador, eliminando la necesidad de comandos manuales por SSH.
+- **FFmpeg (ffmpeg.org)**  
+  Motor de procesamiento multimedia. Se encarga de capturar video crudo (V4L2) y audio (ALSA), comprimirlos en H.264/AAC y empaquetarlos en flujo RTMP.
+
+- **MediaMTX (github.com)**  
+  Servidor de medios (media proxy) que actúa como receptor central; permite que el flujo sea consumido simultáneamente vía WebRTC, HLS y RTSP.
+
+- **Cockpit (cockpit-project.org)**  
+  Interfaz gráfica web para Linux. Permite gestionar los servicios de systemd (iniciar/detener) y monitorear logs de forma visual sin usar SSH.
+
+---
 
 ## 🚀 Instalación y Despliegue Personalizado
 
-El script `install.sh` ahora permite configurar todo el sistema en un solo comando mediante parámetros nombrados. Si no se pasan parámetros, el sistema usará los valores por defecto (RTMP, nicolasrt, USB3.0 Video).
+El script install.sh permite configurar el sistema en un solo comando.  
+Si no se pasan parámetros, usará los valores por defecto (RTMP, nicolasrt, 1080p@60fps).
 
-### Comando de instalación
+---
+
+## 💻  Comando de instalación
+
+### Uso básico (valores por defecto)
 ```bash
-# Uso básico (Valores por defecto)
 chmod +x install.sh && ./install.sh
-
-# Uso avanzado (Personalizado)
-./install.sh -u nicolasrt -m RTMP -n "USB3.0 Video" -v /dev/video0 -b 5-1
 ```
 
-### Parámetros Disponibles
+### Uso avanzado  
+Ejemplo: 720p a 30fps con límite térmico de 70°C
+```bash
+./install.sh -u nicolasrt -s 1280x720 -f 30 -T 70
+```
+
+---
+
+## 📊 Parámetros Disponibles
+
 | Flag | Descripción | Valor por defecto |
-| - | - | - |
-| -u	| Usuario del sistema que ejecutará el servicio	| nicolasrt |
-| -m	| Modo de transmisión (RTMP o UDP) | RTMP |
-| -n	| Nombre del dispositivo de audio (ALSA)	| USB3.0 Video |
-| -i	| IP de destino (Solo necesario para modo UDP)	| 192.168.68.56 |
-| -r	| URL del servidor RTMP	| rtmp://127.0.0.1:1935/live/stream |
-| -v	| Ruta del dispositivo de video	| /dev/video0 |
-| -b	| Identificador del Bus USB para reset (Bus-Puerto)	| 5-1 |
-| -s	| Resolución	| 1920x1080 |
-| -f	| Framerate	| 60 |
-| -T	| Límite de temperatura (°C)	| 75 |
-| -S	| Nombre del servicio a detener	| streaming-tv.service |
+|----|------------|------------------|
+| -u | Usuario del sistema que ejecutará el servicio | nicolasrt |
+| -m | Modo de transmisión (RTMP o UDP) | RTMP |
+| -n | Nombre del dispositivo de audio (ALSA) | USB3.0 Video |
+| -i | IP de destino (solo para modo UDP) | 192.168.68.56 |
+| -r | URL del servidor RTMP local | rtmp://127.0.0.1:1935/live/stream |
+| -v | Ruta del dispositivo de video | /dev/video0 |
+| -b | ID del Bus USB para reset (Bus-Puerto) | 5-1 |
+| -s | Resolución de video (Ancho x Alto) | 1920x1080 |
+| -f | Cuadros por segundo (FPS) | 60 |
+| -T | Límite de temperatura de CPU (°C) | 75 |
+| -S | Servicio a detener si hay sobrecalentamiento | streaming-tv.service |
+
+---
 
 ## 🛠️ Componentes Incluidos
 
-El sistema se basa en cuatro archivos principales que trabajan en conjunto para garantizar la estabilidad de la transmisión:
+- **streaming-tv.sh**  
+  Realiza el mantenimiento del hardware (reset USB), detecta el audio y lanza la codificación FFmpeg.
 
-*   **`streaming-tv.sh`**: Script de Bash que realiza el mantenimiento del hardware (reset del bus USB 3.0), detecta dinámicamente la tarjeta de sonido y lanza el proceso de codificación con FFmpeg.
-*   **`streaming-tv.service`**: Unidad de configuración para `systemd`. Permite que el streaming funcione como un servicio del sistema, facilitando su gestión (encendido/apagado) desde paneles externos como Cockpit.
-*   **`docker-compose.yml`**: Define el contenedor de **MediaMTX**. Actúa como el servidor de medios que recibe la señal RTMP y la convierte automáticamente a WebRTC y HLS para su visualización en navegadores.
-*   **`install.sh`**: Script de automatización que instala todas las dependencias necesarias, configura los permisos de Docker y despliega los archivos anteriores en sus rutas correctas.
-*   **`thermal-monitor.sh`**: Script centinela que supervisa la temperatura de la CPU en tiempo real. Actúa como un sistema de protección activa que detiene automáticamente el servicio de streaming si se alcanza el umbral de seguridad configurado, evitando el sobrecalentamiento y el thermal throttling.
-*   **`thermal-monitor.service`**: Servicio de sistema encargado de mantener el monitor térmico funcionando permanentemente en segundo plano desde el arranque. Su estado y registros de actividad pueden ser monitoreados directamente desde Cockpit.
+- **streaming-tv.service**  
+  Permite la gestión del stream como servicio de sistema desde Cockpit.
+
+- **thermal-monitor.sh**  
+  Script centinela que supervisa la temperatura y detiene el stream en caso de calor crítico.
+
+- **thermal-monitor.service**  
+  Mantiene el monitoreo térmico activo en segundo plano desde el arranque.
+
+- **docker-compose.yml**  
+  Define el contenedor MediaMTX para la distribución del flujo de video.
+
+- **install.sh**  
+  Automatiza dependencias, permisos y despliega los archivos en sus rutas correctas.
+
+---
 
 ## 📱 Control y Visualización
 
-| Función	Dirección | URL |
-|--------------|--------------|
-| Control On/Off | https://IP_DE_LA_PI:9090 (Panel Cockpit) |
-| Ver en Web | http://IP_DE_LA_PI:8888/live/stream |
+| Función | Método / URL |
+|-------|--------------|
+| Control On/Off | Cockpit en https://IP_DE_LA_PI:9090 |
+| Ver en Web | http://IP_DE_LA_PI:8889/live/stream (WebRTC) |
 | Ver en VLC | rtmp://IP_DE_LA_PI:1935/live/stream |
+| Ver en ffplay | ffplay -i "rtmp://IP_DE_LA_PI:1935/live/stream" -fflags nobuffer |
+
+---
 
 ## 🔧 Gestión del Sistema
-Para el mantenimiento y monitoreo del servicio a través de la terminal, utiliza los siguientes comandos:
 
-* Ver logs en tiempo real:
+### Ver logs en tiempo real
 ```bash
 journalctl -u streaming-tv.service -f
 ```
 
-* Reiniciar manualmente el stream:
+### Reiniciar manualmente el stream
 ```bash
 sudo systemctl restart streaming-tv.service
 ```
 
-* Detener la transmisión:
-```bash
-sudo systemctl stop streaming-tv.service
-```
-
-* Verificar estado de los contenedores (MediaMTX):
+### Verificar estado de MediaMTX
 ```bash
 sudo docker ps
 ```
 
-* Diagnóstico de hardware (Cámara y Audio):
+### Diagnóstico de hardware
 ```bash
-v4l2-ctl --list-devices
-arecord -l
+v4l2-ctl --list-devices y arecord -l
 ```
