@@ -127,7 +127,9 @@ if [ -f "$REPO_DIR/idle-monitor.service" ]; then
     sudo cp "$REPO_DIR/idle-monitor.service" /etc/systemd/system/
     IDLE_PARAMS="-t $IDLE_TIME -s $MONITOR_SERVICE -i $IDLE_CHECK_INTERVAL"
     sudo sed -i "s|ExecStart=.*|ExecStart=$INSTALL_DIR/idle-monitor.sh $IDLE_PARAMS|" /etc/systemd/system/idle-monitor.service
-    sudo systemctl enable idle-monitor.service
+    # Deshabilitado hasta que funcione correctamente
+    sudo systemctl disable idle-monitor.service
+    sudo systemctl stop idle-monitor.service
 fi
 
 # ==============================================================================
