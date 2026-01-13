@@ -3,13 +3,8 @@ services:
     image: bluenviron/mediamtx
     container_name: mediamtx
     restart: always
-    environment:
-      - MTX_API=yes
-      - MTX_AUTHINTERNALUSERS_0_USER=admin
-      - MTX_AUTHINTERNALUSERS_0_PASS=password
     ports:
       - "1935:1935" # RTMP (Entrada de la Pi)
       - "8888:8888" # HLS (Visualización web compatible)
       - "8889:8889" # WebRTC (Visualización web latencia cero)
       - "8554:8554" # RTSP
-      - "9997:9997" # Puerto para la API de control

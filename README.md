@@ -60,10 +60,7 @@ Ejemplo: 720p a 30fps con límite térmico de 70°C
 | -T   | Límite de temperatura de CPU (°C)                             | 75                                |
 | -I   | Tiempo de inactividad (segundos) para apagar el stream        | 300                               |
 | -S   | Servicio a detener si hay sobrecalentamiento o inactividad    | streaming-tv.service              |
-| -p   | Ruta del stream en MediaMTX que el monitor vigilará           | live/stream                       |
 | -c   | Intervalo en segundos entre cada comprobación de espectadores | 30                                |
-| -U   | Usuario para autenticación de la API de MediaMTX              | admin                             |
-| -P   | Contraseña para autenticación de la API de MediaMTX           | password                          |
 
 ---
 
