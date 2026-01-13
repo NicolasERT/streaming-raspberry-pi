@@ -22,11 +22,13 @@ IDLE_TIME="300"
 IDLE_CHECK_INTERVAL="30"
 STREAM_PATH="live/stream"
 MONITOR_SERVICE="streaming-tv.service"
+API_USER="admin"
+API_PASS="password"
 
 # ==============================================================================
 # PROCESAMIENTO DE PARÁMETROS NOMBRADOS
 # ==============================================================================
-while getopts "u:m:n:i:r:v:b:s:f:T:I:S:p:c:" opt; do
+while getopts "u:m:n:i:r:v:b:s:f:T:I:S:p:c:U:P:" opt; do
   case $opt in
     u) USER_NAME="$OPTARG" ;;
     m) MODO="$OPTARG" ;;
@@ -42,6 +44,8 @@ while getopts "u:m:n:i:r:v:b:s:f:T:I:S:p:c:" opt; do
     S) MONITOR_SERVICE="$OPTARG" ;; # Servicio a vigilar
     p) STREAM_PATH="$OPTARG" ;;    # Path del stream para monitor de inactividad
     c) IDLE_CHECK_INTERVAL="$OPTARG" ;; # Intervalo chequeo de inactividad
+    U) API_USER="$OPTARG" ;;       # Usuario API MediaMTX
+    P) API_PASS="$OPTARG" ;;       # Contraseña API MediaMTX
     \?) echo "Uso: ./install.sh [opciones]"; exit 1 ;;
   esac
 done
@@ -127,7 +131,7 @@ fi
 # idle-monitor.service
 if [ -f "$REPO_DIR/idle-monitor.service" ]; then
     sudo cp "$REPO_DIR/idle-monitor.service" /etc/systemd/system/
-    IDLE_PARAMS="-t $IDLE_TIME -s $MONITOR_SERVICE -p $STREAM_PATH -i $IDLE_CHECK_INTERVAL"
+    IDLE_PARAMS="-t $IDLE_TIME -s $MONITOR_SERVICE -p $STREAM_PATH -i $IDLE_CHECK_INTERVAL -U $API_USER -P $API_PASS"
     sudo sed -i "s|ExecStart=.*|ExecStart=$INSTALL_DIR/idle-monitor.sh $IDLE_PARAMS|" /etc/systemd/system/idle-monitor.service
     sudo systemctl enable idle-monitor.service
 fi

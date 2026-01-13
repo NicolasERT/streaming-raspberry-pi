@@ -5,6 +5,8 @@ services:
     restart: always
     environment:
       - MTX_API=yes
+      - MTX_AUTHINTERNALUSERS_0_USER=admin
+      - MTX_AUTHINTERNALUSERS_0_PASS=password
     ports:
       - "1935:1935" # RTMP (Entrada de la Pi)
       - "8888:8888" # HLS (Visualización web compatible)

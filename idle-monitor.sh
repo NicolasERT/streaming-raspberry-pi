@@ -8,16 +8,20 @@ STREAM_PATH="live/stream"
 SERVICE_TO_STOP="streaming-tv.service"
 CHECK_INTERVAL=30      # Consultar cada 30 segundos
 API_URL="http://localhost:9997/v3/paths/list"
+API_USER="admin"       # Usuario para autenticación de API
+API_PASS="password"    # Contraseña para autenticación de API
 
 # ==============================================================================
 # PROCESAMIENTO DE PARÁMETROS
 # ==============================================================================
-while getopts "t:p:s:i:" opt; do
+while getopts "t:p:s:i:U:P:" opt; do
   case $opt in
     t) IDLE_LIMIT="$OPTARG" ;;     # Límite de inactividad
     p) STREAM_PATH="$OPTARG" ;;    # Nombre del stream en MediaMTX
     s) SERVICE_TO_STOP="$OPTARG" ;; # Servicio a detener
     i) CHECK_INTERVAL="$OPTARG" ;; # Intervalo de chequeo
+    U) API_USER="$OPTARG" ;;       # Usuario de API
+    P) API_PASS="$OPTARG" ;;       # Contraseña de API
   esac
 done
 
@@ -30,7 +34,7 @@ echo "💤 Monitor de inactividad iniciado: $STREAM_PATH | Límite: $IDLE_LIMIT 
 while true; do
     # Consultar API de MediaMTX para obtener el conteo de lectores (readers)
     # Requiere el paquete 'jq' instalado
-    API_RESPONSE=$(curl -s "$API_URL")
+    API_RESPONSE=$(curl -s -u "$API_USER:$API_PASS" "$API_URL")
     PATH_DATA=$(echo "$API_RESPONSE" | jq -r ".items[] | select(.name==\"$STREAM_PATH\")" 2>/dev/null)
 
     if [[ -z "$PATH_DATA" ]]; then
