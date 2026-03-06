@@ -26,6 +26,39 @@ Si no se pasan parámetros, usará los valores por defecto (RTMP, nicolasrt, 108
 
 ---
 
+## 🧩 Plugin Cockpit integrado
+
+Este repositorio incluye un plugin Cockpit para ver el stream y controlar el servicio desde una UI web:
+
+- Ruta del plugin en el repo: `cockpit/pi-tv/`
+- Script de instalación integral: `scripts/setup_pi_tv.sh`
+- Script de despliegue remoto desde Windows: `scripts/deploy_from_windows.ps1`
+
+### Instalar plugin + streaming en la Raspberry
+
+Desde la raíz del repositorio:
+
+```bash
+chmod +x scripts/setup_pi_tv.sh
+./scripts/setup_pi_tv.sh -u nicolasrt -s 1280x720 -f 30 -T 70
+```
+
+Esto:
+
+1. Copia `manifest.json`, `index.html`, `app.js` y `app.css` a `~/.local/share/cockpit/pi-tv/`
+2. Ejecuta `install.sh` con los parámetros indicados
+3. Recarga servicios (`streaming-tv.service` y `cockpit`)
+
+### Despliegue desde Windows (opcional)
+
+```powershell
+.\scripts\deploy_from_windows.ps1 -PiHost 100.73.121.63 -PiUser nicolasrt -Resolution 1280x720 -Fps 30 -TempLimit 70
+```
+
+También puedes pasar `-RtmpUrl` y `-VideoDevice` para personalizar `install.sh`.
+
+---
+
 ## 💻 Comando de instalación
 
 ### Uso básico (valores por defecto)

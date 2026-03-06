@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TV Streaming</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main class="layout">
+    <header class="header">
+      <h1>TV Streaming</h1>
+      <div class="status-wrap">
+        <span id="status-dot" class="status-dot is-unknown" aria-hidden="true"></span>
+        <span id="status-text">Estado: consultando...</span>
+      </div>
+    </header>
+
+    <section class="player-section" aria-label="Reproductor">
+      <iframe
+        id="stream-frame"
+        class="stream-frame"
+        title="Stream TV"
+        src="http://100.73.121.63:8888/live/stream/"
+        allowfullscreen>
+      </iframe>
+    </section>
+
+    <section class="controls" aria-label="Controles">
+      <button id="btn-start" class="btn btn-start" type="button">Iniciar servicio</button>
+      <button id="btn-stop" class="btn btn-stop" type="button">Detener servicio</button>
+      <button id="btn-1080" class="btn btn-res" type="button">Configurar 1080p</button>
+      <button id="btn-720" class="btn btn-res" type="button">Configurar 720p</button>
+    </section>
+
+    <section class="feedback" aria-live="polite">
+      <p id="message" class="message is-muted">Listo.</p>
+    </section>
+  </main>
+
+  <script src="../base1/cockpit.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

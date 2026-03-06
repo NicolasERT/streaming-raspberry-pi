@@ -1,0 +1,137 @@
+:root {
+  color-scheme: light dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.layout {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 12px;
+  min-height: 100vh;
+  padding: 12px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.status-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #9aa0a6;
+}
+
+.status-dot.is-active {
+  background: #2ba640;
+}
+
+.status-dot.is-inactive {
+  background: #d93025;
+}
+
+.status-dot.is-unknown {
+  background: #9aa0a6;
+}
+
+.player-section {
+  min-height: 0;
+}
+
+.stream-frame {
+  width: 100%;
+  height: calc(100vh - 220px);
+  min-height: 380px;
+  border: 1px solid #c7c7c7;
+  border-radius: 8px;
+  background: #000;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.btn {
+  border: 0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-start {
+  background: #2ba640;
+  color: #fff;
+}
+
+.btn-stop {
+  background: #d93025;
+  color: #fff;
+}
+
+.btn-res {
+  background: #1a73e8;
+  color: #fff;
+}
+
+.feedback {
+  min-height: 1.5rem;
+}
+
+.message {
+  margin: 0;
+  font-weight: 600;
+}
+
+.message.is-success {
+  color: #2ba640;
+}
+
+.message.is-error {
+  color: #d93025;
+}
+
+.message.is-muted,
+.message.is-info {
+  color: #6b7280;
+}
+
+@media (max-width: 960px) {
+  .controls {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+
+  .stream-frame {
+    height: calc(100vh - 280px);
+  }
+}

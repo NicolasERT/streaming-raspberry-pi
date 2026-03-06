@@ -1,0 +1,13 @@
+{
+    "version": 0,
+    "requires": {
+        "cockpit": "273"
+    },
+    "tools": {
+        "pi-tv": {
+            "label": "TV Streaming",
+            "path": "index.html"
+        }
+    },
+    "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; frame-src 'self' http://100.73.121.63:8888; img-src 'self' data: http://100.73.121.63:8888; connect-src 'self';"
+}
