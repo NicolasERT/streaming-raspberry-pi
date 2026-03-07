@@ -4,6 +4,10 @@ Este proyecto permite capturar video y audio de una cámara USB 3.0 en una **Ras
 
 ---
 
+![arquitectura](arquitectura.png)
+
+---
+
 ## ⚙️ Descripción Técnica de Software
 
 El ecosistema se apoya en tres pilares de software de alto rendimiento para garantizar estabilidad y baja latencia:
