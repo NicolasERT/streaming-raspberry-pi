@@ -26,9 +26,15 @@
       </iframe>
     </section>
 
+    <section class="feedback" aria-live="polite">
+      <p id="message" class="message is-muted">Listo.</p>
+    </section>
+
     <section class="controls" aria-label="Controles">
       <button id="btn-start" class="btn btn-start" type="button">Iniciar servicio</button>
       <button id="btn-stop" class="btn btn-stop" type="button">Detener servicio</button>
+      <button id="btn-ch-up" class="btn btn-ch" type="button">Canal ▲</button>
+      <button id="btn-ch-down" class="btn btn-ch" type="button">Canal ▼</button>
       <label for="resolution-select" class="res-label">Resolución</label>
       <select id="resolution-select" class="resolution-select" aria-label="Seleccionar resolución">
         <option value="1920x1080|60">1080p @ 60 FPS</option>
@@ -36,12 +42,6 @@
         <option value="854x480|30">480p @ 30 FPS</option>
       </select>
       <button id="btn-apply-res" class="btn btn-res" type="button">Aplicar resolución</button>
-      <button id="btn-ch-up" class="btn btn-ch" type="button">Canal ▲</button>
-      <button id="btn-ch-down" class="btn btn-ch" type="button">Canal ▼</button>
-    </section>
-
-    <section class="feedback" aria-live="polite">
-      <p id="message" class="message is-muted">Listo.</p>
     </section>
   </main>
 

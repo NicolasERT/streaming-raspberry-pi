@@ -23,6 +23,13 @@ const btnChDown = document.getElementById("btn-ch-down");
 
 const allButtons = [btnStart, btnStop, btnApplyRes, btnChUp, btnChDown];
 
+function setActionButtonsVisibility(state) {
+  const isActive = state === "active";
+
+  btnStart.style.display = isActive ? "none" : "";
+  btnStop.style.display = isActive ? "" : "none";
+}
+
 function getStreamHost() {
   const params = new URLSearchParams(window.location.search);
   const hostParam = params.get("streamHost");
@@ -95,11 +102,55 @@ function checkStatus() {
     .then((output) => {
       const state = output.trim();
       setServiceState(state);
+      setActionButtonsVisibility(state);
       return state;
     })
     .catch(() => {
       setServiceState("unknown");
+      setActionButtonsVisibility("unknown");
       return "unknown";
+    });
+}
+
+function resolutionReadScript() {
+  return `
+set -eu
+
+if ! test -f "${SERVICE_FILE}"; then
+  exit 0
+fi
+
+size="$(grep -oE -- '-s [0-9]+x[0-9]+' "${SERVICE_FILE}" | head -n 1 | awk '{print $2}')"
+fps="$(grep -oE -- '-f [0-9]+' "${SERVICE_FILE}" | head -n 1 | awk '{print $2}')"
+
+if [ -n "$size" ] && [ -n "$fps" ]; then
+  printf '%s|%s\n' "$size" "$fps"
+fi
+`;
+}
+
+function applyCurrentResolutionSelection() {
+  return cockpit
+    .script(resolutionReadScript(), [], { superuser: "require", err: "message" })
+    .then((output) => {
+      const value = output.trim();
+      if (!value) {
+        return;
+      }
+
+      const knownPreset = RESOLUTION_PRESETS[value];
+      if (!knownPreset && !Array.from(resolutionSelect.options).some((option) => option.value === value)) {
+        const [size, fps] = value.split("|");
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = `${size} @ ${fps} FPS (actual)`;
+        resolutionSelect.appendChild(option);
+      }
+
+      resolutionSelect.value = value;
+    })
+    .catch(() => {
+      // Si no se puede leer el service file, mantenemos la selección por defecto.
     });
 }
 
@@ -220,7 +271,7 @@ cockpit
   .init()
   .then(() => {
     initEvents();
-    return checkStatus();
+    return Promise.all([checkStatus(), applyCurrentResolutionSelection()]);
   })
   .then(() => {
     setMessage("Conectado a Cockpit", "muted");
