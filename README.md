@@ -54,10 +54,11 @@ Esto:
 ### Despliegue desde Windows (opcional)
 
 ```powershell
-.\scripts\deploy_from_windows.ps1 -PiHost 100.73.121.63 -PiUser nicolasrt -Resolution 1280x720 -Fps 30 -TempLimit 70 -HaToken "TU_TOKEN_HA"
+.\scripts\deploy_from_windows.ps1 -PiHost "HOST_O_LOCALHOST" -PiUser nicolasrt -Resolution 1280x720 -Fps 30 -TempLimit 70 -HaToken "TU_TOKEN_HA"
 ```
 
 También puedes pasar `-RtmpUrl` y `-VideoDevice` para personalizar `install.sh`.
+Si no pasas `-PiHost`, el valor por defecto es `localhost`.
 
 ---
 
@@ -86,8 +87,8 @@ Ejemplo: 720p a 30fps con límite térmico de 70°C
 | -u   | Usuario del sistema que ejecutará el servicio                 | nicolasrt                         |
 | -m   | Modo de transmisión (RTMP o UDP)                              | RTMP                              |
 | -n   | Nombre del dispositivo de audio (ALSA)                        | USB3.0 Video                      |
-| -i   | IP de destino (solo para modo UDP)                            | 192.168.68.56                     |
-| -r   | URL del servidor RTMP local                                   | rtmp://127.0.0.1:1935/live/stream |
+| -i   | Host/IP de destino (solo para modo UDP)                       | localhost                         |
+| -r   | URL del servidor RTMP local                                   | rtmp://localhost:1935/live/stream |
 | -v   | Ruta del dispositivo de video                                 | /dev/video0                       |
 | -b   | ID del Bus USB para reset (Bus-Puerto)                        | 5-1                               |
 | -s   | Resolución de video (Ancho x Alto)                            | 1920x1080                         |
@@ -127,7 +128,7 @@ Ejemplo: 720p a 30fps con límite térmico de 70°C
   Automatiza dependencias, permisos y despliega los archivos en sus rutas correctas.
 
 - **ha-script-run.sh**
-  Wrapper de integración con Home Assistant para ejecutar scripts (`script.turn_on`) usando token en `/etc/ha-token`.
+  Wrapper de integración con Home Assistant para ejecutar scripts (`script.turn_on`) usando token en `/etc/ha-token` (por defecto usa `http://localhost:8123`).
 
 ---
 

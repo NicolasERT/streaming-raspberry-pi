@@ -1,6 +1,5 @@
 param(
-  [Parameter(Mandatory = $true)]
-  [string]$PiHost,
+  [string]$PiHost = "localhost",
 
   [string]$PiUser = "nicolasrt",
 

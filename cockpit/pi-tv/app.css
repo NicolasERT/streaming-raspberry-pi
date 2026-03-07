@@ -72,8 +72,9 @@ body {
 
 .controls {
   display: grid;
-  grid-template-columns: repeat(6, minmax(120px, 1fr));
+  grid-template-columns: repeat(7, minmax(120px, 1fr));
   gap: 10px;
+  align-items: center;
 }
 
 .btn {
@@ -102,6 +103,19 @@ body {
 .btn-res {
   background: #1a73e8;
   color: #fff;
+}
+
+.res-label {
+  font-weight: 700;
+}
+
+.resolution-select {
+  border: 1px solid #6b7280;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-weight: 600;
+  background: Canvas;
+  color: CanvasText;
 }
 
 .btn-ch {
@@ -133,7 +147,7 @@ body {
 
 @media (max-width: 960px) {
   .controls {
-    grid-template-columns: repeat(3, minmax(130px, 1fr));
+    grid-template-columns: repeat(3, minmax(140px, 1fr));
   }
 
   .stream-frame {
@@ -144,5 +158,13 @@ body {
 @media (max-width: 640px) {
   .controls {
     grid-template-columns: repeat(2, minmax(130px, 1fr));
+  }
+
+  .res-label {
+    grid-column: span 2;
+  }
+
+  .resolution-select {
+    grid-column: span 2;
   }
 }

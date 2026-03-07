@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-HA_BASE_URL="${HA_BASE_URL:-http://100.73.121.63:8123}"
+HA_BASE_URL="${HA_BASE_URL:-http://localhost:8123}"
 TOKEN_FILE="/etc/ha-token"
 
 usage() {

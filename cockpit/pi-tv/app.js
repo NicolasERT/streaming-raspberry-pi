@@ -1,6 +1,13 @@
 const SERVICE_NAME = "streaming-tv.service";
 const SERVICE_FILE = "/etc/systemd/system/streaming-tv.service";
 const HA_WRAPPER = "/usr/local/bin/ha-script-run.sh";
+const STREAM_PORT = "8888";
+
+const RESOLUTION_PRESETS = {
+  "1920x1080|60": { size: "1920x1080", fps: "60", label: "1080p" },
+  "1280x720|30": { size: "1280x720", fps: "30", label: "720p" },
+  "854x480|30": { size: "854x480", fps: "30", label: "480p" }
+};
 
 const statusDot = document.getElementById("status-dot");
 const statusText = document.getElementById("status-text");
@@ -9,12 +16,27 @@ const streamFrame = document.getElementById("stream-frame");
 
 const btnStart = document.getElementById("btn-start");
 const btnStop = document.getElementById("btn-stop");
-const btn1080 = document.getElementById("btn-1080");
-const btn720 = document.getElementById("btn-720");
+const btnApplyRes = document.getElementById("btn-apply-res");
+const resolutionSelect = document.getElementById("resolution-select");
 const btnChUp = document.getElementById("btn-ch-up");
 const btnChDown = document.getElementById("btn-ch-down");
 
-const allButtons = [btnStart, btnStop, btn1080, btn720, btnChUp, btnChDown];
+const allButtons = [btnStart, btnStop, btnApplyRes, btnChUp, btnChDown];
+
+function getStreamHost() {
+  const params = new URLSearchParams(window.location.search);
+  const hostParam = params.get("streamHost");
+
+  if (hostParam && hostParam.trim()) {
+    return hostParam.trim();
+  }
+
+  return window.location.hostname || "localhost";
+}
+
+function getStreamUrl() {
+  return `http://${getStreamHost()}:${STREAM_PORT}/live/stream/`;
+}
 
 function setBusy(isBusy) {
   allButtons.forEach((button) => {
@@ -47,7 +69,7 @@ function setServiceState(state) {
 }
 
 function refreshFrame() {
-  const src = streamFrame.getAttribute("src");
+  const src = streamFrame.getAttribute("src") || getStreamUrl();
   streamFrame.setAttribute("src", src);
 }
 
@@ -157,6 +179,8 @@ function runChannelAction(scriptId, label) {
 }
 
 function initEvents() {
+  streamFrame.setAttribute("src", getStreamUrl());
+
   btnStart.addEventListener("click", () => {
     runCommand(["systemctl", "start", SERVICE_NAME], "Servicio iniciado").then(() => {
       refreshFrame();
@@ -167,12 +191,14 @@ function initEvents() {
     runCommand(["systemctl", "stop", SERVICE_NAME], "Servicio detenido").catch(() => {});
   });
 
-  btn1080.addEventListener("click", () => {
-    runResolution("1920x1080", "60").catch(() => {});
-  });
+  btnApplyRes.addEventListener("click", () => {
+    const selected = RESOLUTION_PRESETS[resolutionSelect.value];
+    if (!selected) {
+      setMessage("Resolución inválida", "error");
+      return;
+    }
 
-  btn720.addEventListener("click", () => {
-    runResolution("1280x720", "30").catch(() => {});
+    runResolution(selected.size, selected.fps).catch(() => {});
   });
 
   btnChUp.addEventListener("click", () => {

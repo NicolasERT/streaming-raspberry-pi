@@ -5,8 +5,8 @@
 # ==============================================================================
 MODO="RTMP"
 DEV_NAME="USB3.0 Video"
-IP_DESTINO="192.168.68.56"
-RTMP_URL="rtmp://127.0.0.1:1935/live/stream"
+IP_DESTINO="localhost"
+RTMP_URL="rtmp://localhost:1935/live/stream"
 VIDEO_DEV="/dev/video0"
 USB_BUS="5-1"
 SIZE="1920x1080"

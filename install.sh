@@ -9,8 +9,8 @@ REPO_DIR=$(pwd)
 # Parámetros Streaming
 MODO="RTMP"
 DEV_NAME="USB3.0 Video"
-IP_DEST="192.168.68.56"
-RTMP_URL="rtmp://127.0.0.1:1935/live/stream"
+IP_DEST="localhost"
+RTMP_URL="rtmp://localhost:1935/live/stream"
 V_DEV="/dev/video0"
 U_BUS="5-1"
 SIZE="1920x1080"

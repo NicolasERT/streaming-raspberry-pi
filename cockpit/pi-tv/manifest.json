@@ -9,5 +9,5 @@
             "path": "index.html"
         }
     },
-    "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; frame-src 'self' http://100.73.121.63:8888; img-src 'self' data: http://100.73.121.63:8888; connect-src 'self';"
+    "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; frame-src 'self' http: https:; img-src 'self' data: http: https:; connect-src 'self';"
 }
