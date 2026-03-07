@@ -14,6 +14,7 @@ FPS="60"
 TEMP_LIMIT="75"
 RTMP_URL=""
 VIDEO_DEVICE=""
+HA_TOKEN=""
 
 usage() {
   cat <<EOF
@@ -28,11 +29,12 @@ Opciones:
   -T <temperatura>   Límite térmico CPU (default: 75)
   -r <rtmp_url>      URL RTMP para install.sh (opcional)
   -v <video_dev>     Dispositivo de video para install.sh, ej /dev/video0 (opcional)
+  -H <ha_token>      Token de Home Assistant para /etc/ha-token (opcional)
   -h                 Mostrar ayuda
 EOF
 }
 
-while getopts ":u:p:c:s:f:T:r:v:h" opt; do
+while getopts ":u:p:c:s:f:T:r:v:H:h" opt; do
   case "$opt" in
     u) PI_USER="$OPTARG" ;;
     p) PLUGIN_SRC="$OPTARG" ;;
@@ -42,6 +44,7 @@ while getopts ":u:p:c:s:f:T:r:v:h" opt; do
     T) TEMP_LIMIT="$OPTARG" ;;
     r) RTMP_URL="$OPTARG" ;;
     v) VIDEO_DEVICE="$OPTARG" ;;
+    H) HA_TOKEN="$OPTARG" ;;
     h)
       usage
       exit 0
@@ -89,12 +92,22 @@ fi
   ./install.sh "${INSTALL_ARGS[@]}"
 )
 
-echo "==> [3/4] Recargando servicios"
+if [ -n "$HA_TOKEN" ]; then
+  echo "==> [3/5] Configurando token de Home Assistant en /etc/ha-token"
+  printf '%s' "$HA_TOKEN" | sudo tee /etc/ha-token >/dev/null
+  sudo chown root:root /etc/ha-token
+  sudo chmod 600 /etc/ha-token
+else
+  echo "==> [3/5] Token de Home Assistant no provisto"
+  echo "    Los botones de canal fallarán hasta crear /etc/ha-token"
+fi
+
+echo "==> [4/5] Recargando servicios"
 sudo systemctl daemon-reload
 sudo systemctl restart streaming-tv.service || true
 sudo systemctl restart cockpit || true
 
-echo "==> [4/4] Estado final"
+echo "==> [5/5] Estado final"
 sudo systemctl --no-pager --full status streaming-tv.service | head -n 20 || true
 
 echo

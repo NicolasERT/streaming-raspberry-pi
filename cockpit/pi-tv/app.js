@@ -1,5 +1,6 @@
 const SERVICE_NAME = "streaming-tv.service";
 const SERVICE_FILE = "/etc/systemd/system/streaming-tv.service";
+const HA_WRAPPER = "/usr/local/bin/ha-script-run.sh";
 
 const statusDot = document.getElementById("status-dot");
 const statusText = document.getElementById("status-text");
@@ -10,8 +11,10 @@ const btnStart = document.getElementById("btn-start");
 const btnStop = document.getElementById("btn-stop");
 const btn1080 = document.getElementById("btn-1080");
 const btn720 = document.getElementById("btn-720");
+const btnChUp = document.getElementById("btn-ch-up");
+const btnChDown = document.getElementById("btn-ch-down");
 
-const allButtons = [btnStart, btnStop, btn1080, btn720];
+const allButtons = [btnStart, btnStop, btn1080, btn720, btnChUp, btnChDown];
 
 function setBusy(isBusy) {
   allButtons.forEach((button) => {
@@ -134,6 +137,25 @@ function runResolution(size, fps) {
     });
 }
 
+function runChannelAction(scriptId, label) {
+  setBusy(true);
+  setMessage(`Ejecutando ${label}...`, "muted");
+
+  return cockpit
+    .spawn([HA_WRAPPER, scriptId], { superuser: "require", err: "message" })
+    .then(() => {
+      setMessage(`${label} ejecutado`, "success");
+    })
+    .catch((error) => {
+      setMessage(`Error: ${parseError(error)}`, "error");
+      throw error;
+    })
+    .finally(() => {
+      setBusy(false);
+      checkStatus();
+    });
+}
+
 function initEvents() {
   btnStart.addEventListener("click", () => {
     runCommand(["systemctl", "start", SERVICE_NAME], "Servicio iniciado").then(() => {
@@ -151,6 +173,14 @@ function initEvents() {
 
   btn720.addEventListener("click", () => {
     runResolution("1280x720", "30").catch(() => {});
+  });
+
+  btnChUp.addEventListener("click", () => {
+    runChannelAction("script.subir_canal", "Subir canal").catch(() => {});
+  });
+
+  btnChDown.addEventListener("click", () => {
+    runChannelAction("script.bajar_canal", "Bajar canal").catch(() => {});
   });
 
   cockpit.addEventListener("visibilitychange", () => {

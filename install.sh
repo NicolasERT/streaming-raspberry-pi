@@ -87,6 +87,14 @@ for script in "streaming-tv.sh" "thermal-monitor.sh" "idle-monitor.sh"; do
     fi
 done
 
+if [ -f "$REPO_DIR/scripts/ha-script-run.sh" ]; then
+    echo "📜 Instalando wrapper Home Assistant..."
+    sudo cp "$REPO_DIR/scripts/ha-script-run.sh" /usr/local/bin/ha-script-run.sh
+    sudo sed -i 's/\r$//' /usr/local/bin/ha-script-run.sh
+    sudo chown root:root /usr/local/bin/ha-script-run.sh
+    sudo chmod 750 /usr/local/bin/ha-script-run.sh
+fi
+
 # ==============================================================================
 # 3. CONFIGURACIÓN DE DOCKER (MediaMTX)
 # ==============================================================================

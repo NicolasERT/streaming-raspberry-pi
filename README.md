@@ -40,19 +40,21 @@ Desde la raíz del repositorio:
 
 ```bash
 chmod +x scripts/setup_pi_tv.sh
-./scripts/setup_pi_tv.sh -u nicolasrt -s 1280x720 -f 30 -T 70
+./scripts/setup_pi_tv.sh -u nicolasrt -s 1280x720 -f 30 -T 70 -H 'TU_TOKEN_HA'
 ```
 
 Esto:
 
 1. Copia `manifest.json`, `index.html`, `app.js` y `app.css` a `~/.local/share/cockpit/pi-tv/`
 2. Ejecuta `install.sh` con los parámetros indicados
-3. Recarga servicios (`streaming-tv.service` y `cockpit`)
+3. Instala el wrapper de Home Assistant en `/usr/local/bin/ha-script-run.sh`
+4. Guarda el token HA en `/etc/ha-token` (si se usa `-H`)
+5. Recarga servicios (`streaming-tv.service` y `cockpit`)
 
 ### Despliegue desde Windows (opcional)
 
 ```powershell
-.\scripts\deploy_from_windows.ps1 -PiHost 100.73.121.63 -PiUser nicolasrt -Resolution 1280x720 -Fps 30 -TempLimit 70
+.\scripts\deploy_from_windows.ps1 -PiHost 100.73.121.63 -PiUser nicolasrt -Resolution 1280x720 -Fps 30 -TempLimit 70 -HaToken "TU_TOKEN_HA"
 ```
 
 También puedes pasar `-RtmpUrl` y `-VideoDevice` para personalizar `install.sh`.
@@ -91,6 +93,7 @@ Ejemplo: 720p a 30fps con límite térmico de 70°C
 | -s   | Resolución de video (Ancho x Alto)                            | 1920x1080                         |
 | -f   | Cuadros por segundo (FPS)                                     | 60                                |
 | -T   | Límite de temperatura de CPU (°C)                             | 75                                |
+| -H   | Token de Home Assistant para controles de canal (setup_pi_tv) | (vacío / opcional)                |
 | -I   | Tiempo de inactividad (segundos) para apagar el stream        | 300                               |
 | -S   | Servicio a detener si hay sobrecalentamiento o inactividad    | streaming-tv.service              |
 | -c   | Intervalo en segundos entre cada comprobación de espectadores | 30                                |
@@ -122,6 +125,9 @@ Ejemplo: 720p a 30fps con límite térmico de 70°C
 
 - **install.sh**  
   Automatiza dependencias, permisos y despliega los archivos en sus rutas correctas.
+
+- **ha-script-run.sh**
+  Wrapper de integración con Home Assistant para ejecutar scripts (`script.turn_on`) usando token en `/etc/ha-token`.
 
 ---
 
