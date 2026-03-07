@@ -184,13 +184,9 @@ function initEvents() {
   });
 
   cockpit.addEventListener("visibilitychange", () => {
-    if (cockpit.hidden) {
-      streamFrame.setAttribute("src", "about:blank");
-      return;
+    if (!cockpit.hidden) {
+      checkStatus();
     }
-
-    streamFrame.setAttribute("src", "http://100.73.121.63:8888/live/stream/");
-    checkStatus();
   });
 }
 
