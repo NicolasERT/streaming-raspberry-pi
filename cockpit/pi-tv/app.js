@@ -29,7 +29,7 @@ const sceneButtons = [
   { id: "btn-scene-guide", entityId: "scene.guia_tv", label: "Guia" },
   { id: "btn-scene-ok", entityId: "scene.ok_tv", label: "OK" },
   { id: "btn-scene-language", entityId: "scene.idioma_tv", label: "Idioma" },
-  { id: "btn-scene-subtitle", entityId: "scene.subtitulo_tv", label: "Subtitulo" }
+  { id: "btn-scene-subtitle", entityId: "scene.subtitulos_tv", label: "Subtitulo" }
 ];
 
 const sceneElements = sceneButtons
