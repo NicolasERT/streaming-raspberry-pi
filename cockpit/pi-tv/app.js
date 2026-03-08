@@ -18,10 +18,10 @@ const controlsPanel = document.getElementById("controls-panel");
 const btnStart = document.getElementById("btn-start");
 const btnStop = document.getElementById("btn-stop");
 const resolutionSelect = document.getElementById("resolution-select");
-const btnChUp = document.getElementById("btn-ch-up");
-const btnChDown = document.getElementById("btn-ch-down");
 
 const sceneButtons = [
+  { id: "btn-ch-up", entityId: "scene.subir_canal_tv", label: "Subir canal" },
+  { id: "btn-ch-down", entityId: "scene.bajar_canal_tv", label: "Bajar canal" },
   { id: "btn-scene-up", entityId: "scene.arriba_tv", label: "Arriba" },
   { id: "btn-scene-down", entityId: "scene.abajo_tv", label: "Abajo" },
   { id: "btn-scene-left", entityId: "scene.izquierda_tv", label: "Izquierda" },
@@ -36,7 +36,7 @@ const sceneElements = sceneButtons
   .map((item) => ({ ...item, element: document.getElementById(item.id) }))
   .filter((item) => item.element);
 
-const allControls = [btnStart, btnStop, btnChUp, btnChDown, resolutionSelect, ...sceneElements.map((item) => item.element)];
+const allControls = [btnStart, btnStop, resolutionSelect, ...sceneElements.map((item) => item.element)];
 
 function setActionButtonsVisibility(state) {
   const isActive = state === "active";
@@ -265,14 +265,6 @@ function initEvents() {
     }
 
     runResolution(selected.size, selected.fps).catch(() => {});
-  });
-
-  btnChUp.addEventListener("click", () => {
-    runHomeAssistantAction("script.subir_canal", "Subir canal").catch(() => {});
-  });
-
-  btnChDown.addEventListener("click", () => {
-    runHomeAssistantAction("script.bajar_canal", "Bajar canal").catch(() => {});
   });
 
   sceneElements.forEach(({ element, entityId, label }) => {
