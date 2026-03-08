@@ -2,7 +2,6 @@ const SERVICE_NAME = "streaming-tv.service";
 const SERVICE_FILE = "/etc/systemd/system/streaming-tv.service";
 const HA_WRAPPER = "/usr/local/bin/ha-script-run.sh";
 const STREAM_PORT = "8888";
-const CONTROLS_COLLAPSED_KEY = "pi-tv.controls.collapsed";
 
 const RESOLUTION_PRESETS = {
   "1920x1080|60": { size: "1920x1080", fps: "60", label: "1080p" },
@@ -16,7 +15,6 @@ const message = document.getElementById("message");
 const streamFrame = document.getElementById("stream-frame");
 
 const controlsPanel = document.getElementById("controls-panel");
-const controlsToggle = document.getElementById("controls-toggle");
 const btnStart = document.getElementById("btn-start");
 const btnStop = document.getElementById("btn-stop");
 const resolutionSelect = document.getElementById("resolution-select");
@@ -66,35 +64,6 @@ function setBusy(isBusy) {
   allControls.forEach((control) => {
     control.disabled = isBusy;
   });
-}
-
-function setControlsCollapsed(isCollapsed) {
-  if (!controlsPanel || !controlsToggle) {
-    return;
-  }
-
-  controlsPanel.classList.toggle("is-collapsed", isCollapsed);
-  controlsPanel.classList.toggle("is-expanded", !isCollapsed);
-
-  controlsToggle.setAttribute("aria-expanded", String(!isCollapsed));
-  controlsToggle.setAttribute("aria-label", isCollapsed ? "Mostrar controles" : "Ocultar controles");
-  controlsToggle.title = isCollapsed ? "Mostrar controles" : "Ocultar controles";
-}
-
-function loadControlsCollapsedPreference() {
-  try {
-    return localStorage.getItem(CONTROLS_COLLAPSED_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function saveControlsCollapsedPreference(isCollapsed) {
-  try {
-    localStorage.setItem(CONTROLS_COLLAPSED_KEY, isCollapsed ? "1" : "0");
-  } catch {
-    // En algunos navegadores embebidos localStorage puede no estar disponible.
-  }
 }
 
 function setMessage(text, type = "info") {
@@ -277,16 +246,6 @@ function runHomeAssistantAction(entityId, label) {
 
 function initEvents() {
   streamFrame.setAttribute("src", getStreamUrl());
-
-  setControlsCollapsed(loadControlsCollapsedPreference());
-
-  if (controlsToggle) {
-    controlsToggle.addEventListener("click", () => {
-      const isCollapsed = controlsPanel.classList.contains("is-collapsed");
-      setControlsCollapsed(!isCollapsed);
-      saveControlsCollapsedPreference(!isCollapsed);
-    });
-  }
 
   btnStart.addEventListener("click", () => {
     runCommand(["systemctl", "start", SERVICE_NAME], "Servicio iniciado").then(() => {
