@@ -16,33 +16,72 @@
       </div>
     </header>
 
-    <section class="player-section" aria-label="Reproductor">
-      <iframe
-        id="stream-frame"
-        class="stream-frame"
-        title="Stream TV"
-        src="about:blank"
-        allowfullscreen>
-      </iframe>
-    </section>
+    <div class="content-layout">
+      <section class="player-column" aria-label="Reproductor y estado">
+        <section class="player-section" aria-label="Reproductor">
+          <iframe
+            id="stream-frame"
+            class="stream-frame"
+            title="Stream TV"
+            src="about:blank"
+            allowfullscreen>
+          </iframe>
+        </section>
+      </section>
 
-    <section class="feedback" aria-live="polite">
-      <p id="message" class="message is-muted">Listo.</p>
-    </section>
+      <aside id="controls-panel" class="controls-panel is-expanded" aria-label="Controles">
+        <button
+          id="controls-toggle"
+          class="controls-toggle"
+          type="button"
+          aria-label="Ocultar controles"
+          aria-expanded="true"
+          aria-controls="controls-body"
+          title="Ocultar controles">
+          ❯
+        </button>
 
-    <section class="controls" aria-label="Controles">
-      <button id="btn-start" class="btn btn-start" type="button">Iniciar servicio</button>
-      <button id="btn-stop" class="btn btn-stop" type="button">Detener servicio</button>
-      <button id="btn-ch-up" class="btn btn-ch" type="button">Canal ▲</button>
-      <button id="btn-ch-down" class="btn btn-ch" type="button">Canal ▼</button>
-      <label for="resolution-select" class="res-label">Resolución</label>
-      <select id="resolution-select" class="resolution-select" aria-label="Seleccionar resolución">
-        <option value="1920x1080|60">1080p @ 60 FPS</option>
-        <option value="1280x720|30">720p @ 30 FPS</option>
-        <option value="854x480|30">480p @ 30 FPS</option>
-      </select>
-      <button id="btn-apply-res" class="btn btn-res" type="button">Aplicar resolución</button>
-    </section>
+        <div id="controls-body" class="controls-body">
+          <div class="remote-system">
+            <button id="btn-start" class="btn btn-start" type="button">Iniciar servicio</button>
+            <button id="btn-stop" class="btn btn-stop" type="button">Detener servicio</button>
+          </div>
+
+          <div class="remote-extra">
+            <button id="btn-scene-guide" class="btn btn-aux" type="button">Guia</button>
+            <button id="btn-scene-language" class="btn btn-aux" type="button">Idioma</button>
+            <button id="btn-scene-subtitle" class="btn btn-aux" type="button">Subtitulo</button>
+          </div>
+
+          <div class="remote-core">
+            <div class="remote-channel">
+              <button id="btn-ch-up" class="btn btn-ch" type="button">Canal ▲</button>
+              <button id="btn-ch-down" class="btn btn-ch" type="button">Canal ▼</button>
+            </div>
+
+            <section class="remote-pad" aria-label="Control direccional">
+              <button id="btn-scene-up" class="btn btn-remote" type="button">Arriba</button>
+              <button id="btn-scene-left" class="btn btn-remote" type="button">Izquierda</button>
+              <button id="btn-scene-ok" class="btn btn-ok" type="button">OK</button>
+              <button id="btn-scene-right" class="btn btn-remote" type="button">Derecha</button>
+              <button id="btn-scene-down" class="btn btn-remote" type="button">Abajo</button>
+            </section>
+          </div>
+
+          <div class="remote-resolution">
+            <select id="resolution-select" class="resolution-select" aria-label="Seleccionar resolución">
+              <option value="1920x1080|60">1080p @ 60 FPS</option>
+              <option value="1280x720|30">720p @ 30 FPS</option>
+              <option value="854x480|30">480p @ 30 FPS</option>
+            </select>
+          </div>
+
+          <section class="feedback" aria-live="polite">
+            <p id="message" class="message is-muted">Listo.</p>
+          </section>
+        </div>
+      </aside>
+    </div>
   </main>
 
   <script src="../base1/cockpit.js"></script>

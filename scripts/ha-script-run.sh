@@ -6,10 +6,11 @@ TOKEN_FILE="/etc/ha-token"
 
 usage() {
   cat <<EOF
-Uso: $(basename "$0") <entity_id_script>
+Uso: $(basename "$0") <entity_id>
 
 Ejemplo:
   $(basename "$0") script.subir_canal
+  $(basename "$0") scene.noche
 EOF
 }
 
@@ -19,7 +20,7 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
 fi
 
 if [ $# -lt 1 ] || [ -z "${1:-}" ]; then
-  echo "Error: Debes indicar un entity_id de script (ej. script.subir_canal)." >&2
+  echo "Error: Debes indicar un entity_id (ej. script.subir_canal o scene.noche)." >&2
   usage >&2
   exit 1
 fi
@@ -37,6 +38,13 @@ fi
 SCRIPT_ID="$1"
 TOKEN="$(tr -d '\r\n' < "$TOKEN_FILE")"
 
+DOMAIN="${SCRIPT_ID%%.*}"
+
+if [ "$DOMAIN" != "script" ] && [ "$DOMAIN" != "scene" ]; then
+  echo "Error: Solo se admiten entity_id de tipo script.* o scene.*" >&2
+  exit 1
+fi
+
 if [ -z "$TOKEN" ]; then
   echo "Error: El token en $TOKEN_FILE está vacío." >&2
   exit 1
@@ -49,7 +57,7 @@ curl -sS -f \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d "$PAYLOAD" \
-  "$HA_BASE_URL/api/services/script/turn_on" \
+  "$HA_BASE_URL/api/services/$DOMAIN/turn_on" \
   >/dev/null
 
 echo "OK: ejecutado $SCRIPT_ID en Home Assistant"

@@ -2,6 +2,7 @@ const SERVICE_NAME = "streaming-tv.service";
 const SERVICE_FILE = "/etc/systemd/system/streaming-tv.service";
 const HA_WRAPPER = "/usr/local/bin/ha-script-run.sh";
 const STREAM_PORT = "8888";
+const CONTROLS_COLLAPSED_KEY = "pi-tv.controls.collapsed";
 
 const RESOLUTION_PRESETS = {
   "1920x1080|60": { size: "1920x1080", fps: "60", label: "1080p" },
@@ -14,14 +15,30 @@ const statusText = document.getElementById("status-text");
 const message = document.getElementById("message");
 const streamFrame = document.getElementById("stream-frame");
 
+const controlsPanel = document.getElementById("controls-panel");
+const controlsToggle = document.getElementById("controls-toggle");
 const btnStart = document.getElementById("btn-start");
 const btnStop = document.getElementById("btn-stop");
-const btnApplyRes = document.getElementById("btn-apply-res");
 const resolutionSelect = document.getElementById("resolution-select");
 const btnChUp = document.getElementById("btn-ch-up");
 const btnChDown = document.getElementById("btn-ch-down");
 
-const allButtons = [btnStart, btnStop, btnApplyRes, btnChUp, btnChDown];
+const sceneButtons = [
+  { id: "btn-scene-up", entityId: "scene.arriba_tv", label: "Arriba" },
+  { id: "btn-scene-down", entityId: "scene.abajo_tv", label: "Abajo" },
+  { id: "btn-scene-left", entityId: "scene.izquierda_tv", label: "Izquierda" },
+  { id: "btn-scene-right", entityId: "scene.derecha_tv", label: "Derecha" },
+  { id: "btn-scene-guide", entityId: "scene.guia_tv", label: "Guia" },
+  { id: "btn-scene-ok", entityId: "scene.ok_tv", label: "OK" },
+  { id: "btn-scene-language", entityId: "scene.idioma_tv", label: "Idioma" },
+  { id: "btn-scene-subtitle", entityId: "scene.subtitulo_tv", label: "Subtitulo" }
+];
+
+const sceneElements = sceneButtons
+  .map((item) => ({ ...item, element: document.getElementById(item.id) }))
+  .filter((item) => item.element);
+
+const allControls = [btnStart, btnStop, btnChUp, btnChDown, resolutionSelect, ...sceneElements.map((item) => item.element)];
 
 function setActionButtonsVisibility(state) {
   const isActive = state === "active";
@@ -46,9 +63,38 @@ function getStreamUrl() {
 }
 
 function setBusy(isBusy) {
-  allButtons.forEach((button) => {
-    button.disabled = isBusy;
+  allControls.forEach((control) => {
+    control.disabled = isBusy;
   });
+}
+
+function setControlsCollapsed(isCollapsed) {
+  if (!controlsPanel || !controlsToggle) {
+    return;
+  }
+
+  controlsPanel.classList.toggle("is-collapsed", isCollapsed);
+  controlsPanel.classList.toggle("is-expanded", !isCollapsed);
+
+  controlsToggle.setAttribute("aria-expanded", String(!isCollapsed));
+  controlsToggle.setAttribute("aria-label", isCollapsed ? "Mostrar controles" : "Ocultar controles");
+  controlsToggle.title = isCollapsed ? "Mostrar controles" : "Ocultar controles";
+}
+
+function loadControlsCollapsedPreference() {
+  try {
+    return localStorage.getItem(CONTROLS_COLLAPSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function saveControlsCollapsedPreference(isCollapsed) {
+  try {
+    localStorage.setItem(CONTROLS_COLLAPSED_KEY, isCollapsed ? "1" : "0");
+  } catch {
+    // En algunos navegadores embebidos localStorage puede no estar disponible.
+  }
 }
 
 function setMessage(text, type = "info") {
@@ -210,12 +256,12 @@ function runResolution(size, fps) {
     });
 }
 
-function runChannelAction(scriptId, label) {
+function runHomeAssistantAction(entityId, label) {
   setBusy(true);
   setMessage(`Ejecutando ${label}...`, "muted");
 
   return cockpit
-    .spawn([HA_WRAPPER, scriptId], { superuser: "require", err: "message" })
+    .spawn([HA_WRAPPER, entityId], { superuser: "require", err: "message" })
     .then(() => {
       setMessage(`${label} ejecutado`, "success");
     })
@@ -232,6 +278,16 @@ function runChannelAction(scriptId, label) {
 function initEvents() {
   streamFrame.setAttribute("src", getStreamUrl());
 
+  setControlsCollapsed(loadControlsCollapsedPreference());
+
+  if (controlsToggle) {
+    controlsToggle.addEventListener("click", () => {
+      const isCollapsed = controlsPanel.classList.contains("is-collapsed");
+      setControlsCollapsed(!isCollapsed);
+      saveControlsCollapsedPreference(!isCollapsed);
+    });
+  }
+
   btnStart.addEventListener("click", () => {
     runCommand(["systemctl", "start", SERVICE_NAME], "Servicio iniciado").then(() => {
       refreshFrame();
@@ -242,7 +298,7 @@ function initEvents() {
     runCommand(["systemctl", "stop", SERVICE_NAME], "Servicio detenido").catch(() => {});
   });
 
-  btnApplyRes.addEventListener("click", () => {
+  resolutionSelect.addEventListener("change", () => {
     const selected = RESOLUTION_PRESETS[resolutionSelect.value];
     if (!selected) {
       setMessage("Resolución inválida", "error");
@@ -253,11 +309,17 @@ function initEvents() {
   });
 
   btnChUp.addEventListener("click", () => {
-    runChannelAction("script.subir_canal", "Subir canal").catch(() => {});
+    runHomeAssistantAction("script.subir_canal", "Subir canal").catch(() => {});
   });
 
   btnChDown.addEventListener("click", () => {
-    runChannelAction("script.bajar_canal", "Bajar canal").catch(() => {});
+    runHomeAssistantAction("script.bajar_canal", "Bajar canal").catch(() => {});
+  });
+
+  sceneElements.forEach(({ element, entityId, label }) => {
+    element.addEventListener("click", () => {
+      runHomeAssistantAction(entityId, label).catch(() => {});
+    });
   });
 
   cockpit.addEventListener("visibilitychange", () => {
