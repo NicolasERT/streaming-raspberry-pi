@@ -1,179 +1,174 @@
-# 📹 Sistema de Streaming TV — Raspberry Pi 5
+# 📹 Sistema de Streaming TV (NicolasRT)
 
-Captura video y audio desde una cámara USB 3.0 en una **Raspberry Pi 5** y transmite a la red local vía **RTMP**, con visualización por **WebRTC**, **HLS**, **RTSP** o **VLC**.
-
----
-
-## ⚙️ Arquitectura
-
-| Componente | Función |
-|------------|---------|
-| **FFmpeg** | Captura V4L2 + ALSA, codifica H.264/AAC, envía flujo RTMP |
-| **MediaMTX** | Media proxy (RTMP → WebRTC / HLS / RTSP) en Docker |
-| **Cockpit** | Interfaz web para controlar servicios y ver el stream |
-| **systemd** | Servicios para streaming, monitor térmico y monitor de inactividad |
+Este proyecto permite capturar video y audio de una cámara USB 3.0 en una **Raspberry Pi 5** y transmitirlo a la red local mediante **RTMP**, permitiendo visualización en navegadores (**WebRTC**), **VLC** u **OBS**.
 
 ---
 
-## 📁 Estructura del Repositorio
-
-```
-streaming-raspberry-pi/
-├── install.sh                      # Instalador interactivo (TUI)
-├── README.md
-├── docker-compose.yml              # MediaMTX container
-├── config/
-│   ├── default.env                 # Parámetros por defecto (centralizados)
-│   └── config.sh                   # Librería helper compartida
-├── systemd/
-│   ├── streaming-tv.service        # Plantilla servicio streaming
-│   ├── thermal-monitor.service     # Plantilla monitor térmico
-│   └── idle-monitor.service        # Plantilla monitor inactividad
-├── bin/
-│   ├── streaming-tv.sh             # Captura y transmisión FFmpeg
-│   ├── thermal-monitor.sh          # Centinela de temperatura CPU
-│   ├── idle-monitor.sh             # Apagado por inactividad
-│   └── ha-script-run.sh            # Wrapper Home Assistant
-└── cockpit/
-    └── pi-tv/                      # Plugin Cockpit (UI web)
-        ├── manifest.json
-        ├── index.html
-        ├── app.js
-        └── app.css
-```
+![arquitectura](arquitectura.png)
 
 ---
 
-## 🚀 Instalación
+## ⚙️ Descripción Técnica de Software
 
-### Modo interactivo (recomendado)
+El ecosistema se apoya en tres pilares de software de alto rendimiento para garantizar estabilidad y baja latencia:
+
+- **FFmpeg (ffmpeg.org)**  
+  Motor de procesamiento multimedia. Se encarga de capturar video crudo (V4L2) y audio (ALSA), comprimirlos en H.264/AAC y empaquetarlos en flujo RTMP.
+
+- **MediaMTX (github.com)**  
+  Servidor de medios (media proxy) que actúa como receptor central; permite que el flujo sea consumido simultáneamente vía WebRTC, HLS y RTSP.
+
+- **Cockpit (cockpit-project.org)**  
+  Interfaz gráfica web para Linux. Permite gestionar los servicios de systemd (iniciar/detener) y monitorear logs de forma visual sin usar SSH.
+
+---
+
+## 🚀 Instalación y Despliegue Personalizado
+
+El script install.sh permite configurar el sistema en un solo comando.  
+Si no se pasan parámetros, usará los valores por defecto (RTMP, nicolasrt, 1080p@60fps).
+
+---
+
+## 🧩 Plugin Cockpit integrado
+
+Este repositorio incluye un plugin Cockpit para ver el stream y controlar el servicio desde una UI web:
+
+- Ruta del plugin en el repo: `cockpit/pi-tv/`
+- Script de instalación integral: `scripts/setup_pi_tv.sh`
+- Script de despliegue remoto desde Windows: `scripts/deploy_from_windows.ps1`
+
+### Instalar plugin + streaming en la Raspberry
+
+Desde la raíz del repositorio:
 
 ```bash
-chmod +x install.sh
-./install.sh
+chmod +x scripts/setup_pi_tv.sh
+./scripts/setup_pi_tv.sh -u nicolasrt -s 1280x720 -f 30 -T 70 -H 'TU_TOKEN_HA'
 ```
 
-Se abrirá un asistente con `whiptail` donde podrás:
+Esto:
 
-1. **Seleccionar componentes** a instalar (dependencias, MediaMTX, streaming, monitor térmico, monitor de inactividad, Cockpit, Home Assistant)
-2. **Configurar parámetros** de cada componente (resolución, FPS, bitrate, puertos, temperatura, etc.)
-3. **Revisar** la configuración antes de aplicarla
-4. **Ejecutar** la instalación con barra de progreso
+1. Copia `manifest.json`, `index.html`, `app.js` y `app.css` a `~/.local/share/cockpit/pi-tv/`
+2. Ejecuta `install.sh` con los parámetros indicados
+3. Instala el wrapper de Home Assistant en `/usr/local/bin/ha-script-run.sh`
+4. Guarda el token HA en `/etc/ha-token` (si se usa `-H`)
+5. Recarga servicios (`streaming-tv.service` y `cockpit`)
 
-### Modo no-interactivo
+### Despliegue desde Windows (opcional)
 
-```bash
-./install.sh --non-interactive -u nicolasrt -s 1280x720 -f 30 -T 70
+```powershell
+.\scripts\deploy_from_windows.ps1 -PiHost "HOST_O_LOCALHOST" -PiUser nicolasrt -Resolution 1280x720 -Fps 30 -TempLimit 70 -HaToken "TU_TOKEN_HA"
 ```
 
-Usa los valores de `config/default.env` con overrides por CLI:
-
-| Flag | Descripción | Default |
-|------|-------------|---------|
-| `-u` | Usuario del sistema | nicolasrt |
-| `-s` | Resolución de video | 1920x1080 |
-| `-f` | FPS | 60 |
-| `-r` | URL RTMP | rtmp://localhost:1935/live/stream |
-| `-v` | Dispositivo de video | /dev/video0 |
-| `-b` | Bus USB (Bus-Puerto) | 5-1 |
-| `-T` | Límite de temperatura (°C) | 75 |
-| `-H` | Token de Home Assistant | (vacío) |
-| `-n` | Nombre dispositivo audio | USB3.0 Video |
+También puedes pasar `-RtmpUrl` y `-VideoDevice` para personalizar `install.sh`.
+Si no pasas `-PiHost`, el valor por defecto es `localhost`.
 
 ---
 
-## 🔧 Configuración
+## 💻 Comando de instalación
 
-Toda la configuración está centralizada en un solo archivo:
-
-- **Defaults del repo**: [`config/default.env`](config/default.env) — plantilla con valores por defecto
-- **Config del sistema**: `/etc/streaming-pi/config.env` — generado por el instalador, sobreescribe defaults
-- **Config Cockpit**: `/etc/streaming-pi/cockpit-config.json` — puertos y entidades HA para el plugin web
-
-### Parámetros configurables
-
-| Categoría | Parámetro | Default | Descripción |
-|-----------|-----------|---------|-------------|
-| **Video** | `V_DEV` | /dev/video0 | Dispositivo de video |
-| | `SIZE` | 1920x1080 | Resolución |
-| | `FPS` | 60 | Fotogramas por segundo |
-| | `VIDEO_BITRATE` | 4000k | Bitrate de video |
-| **Audio** | `DEV_NAME` | USB3.0 Video | Nombre dispositivo ALSA |
-| | `AUDIO_SAMPLE_RATE` | 44100 | Sample rate (Hz) |
-| | `AUDIO_VOLUME` | 15 | Volumen (dB) |
-| **USB** | `U_BUS` | 5-1 | Bus USB para reset eléctrico |
-| **RTMP** | `RTMP_URL` | rtmp://localhost:1935/live/stream | URL servidor RTMP |
-| **MediaMTX** | `RTMP_PORT` | 1935 | Puerto RTMP |
-| | `HLS_PORT` | 8888 | Puerto HLS |
-| | `WEBRTC_PORT` | 8889 | Puerto WebRTC |
-| | `RTSP_PORT` | 8554 | Puerto RTSP |
-| **Térmico** | `TEMP_LIMIT` | 75 | Límite temperatura CPU (°C) |
-| | `THERMAL_CHECK_INTERVAL` | 10 | Intervalo chequeo (seg) |
-| | `THERMAL_COOLDOWN` | 60 | Enfriamiento post-alerta (seg) |
-| **Inactividad** | `IDLE_TIME` | 300 | Tiempo sin espectadores (seg) |
-| | `IDLE_CHECK_INTERVAL` | 30 | Intervalo chequeo (seg) |
-| **Home Assistant** | `HA_BASE_URL` | http://localhost:8123 | URL de HA |
-| | `HA_TOKEN_FILE` | /etc/ha-token | Ruta del token |
-| | `HA_ENTITIES` | (escenas TV) | Entidades HA configurables |
-
----
-
-## 🛠️ Componentes
-
-### `bin/streaming-tv.sh`
-
-Realiza el mantenimiento del hardware (reset USB), detecta el audio ALSA y lanza la codificación FFmpeg vía RTMP.
-
-### `bin/thermal-monitor.sh`
-
-Centinela de temperatura CPU. Detiene el streaming si supera el límite configurado. Incluye histéresis térmica para evitar reinicios en ráfaga.
-
-### `bin/idle-monitor.sh`
-
-Monitorea conexiones activas en los puertos de MediaMTX. Si no detecta espectadores durante el tiempo configurado, detiene el servicio de streaming.
-
-### `bin/ha-script-run.sh`
-
-Wrapper para ejecutar scripts y escenas de Home Assistant. Incluye reintentos automáticos con backoff exponencial.
-
-### `cockpit/pi-tv/`
-
-Plugin Cockpit con interfaz web para:
-- Iniciar/Detener el streaming
-- Cambiar resolución en caliente
-- Controlar TV vía Home Assistant (entidades configurables)
-- Ver stream embebido (WebRTC/HLS)
-
----
-
-## 📱 Acceso
-
-| Función | URL |
-|---------|-----|
-| Control On/Off | `https://<IP>:9090` (Cockpit) |
-| Ver en Web (WebRTC) | `http://<IP>:8889/live/stream` |
-| Ver en Web (HLS) | `http://<IP>:8888/live/stream` |
-| Ver en VLC | `rtmp://<IP>:1935/live/stream` |
-| Ver en ffplay | `ffplay -i "rtmp://<IP>:1935/live/stream" -fflags nobuffer` |
-
----
-
-## 🔍 Gestión y Diagnóstico
+### Uso básico (valores por defecto)
 
 ```bash
-# Ver logs en tiempo real
+chmod +x install.sh && ./install.sh
+```
+
+### Uso avanzado
+
+Ejemplo: 720p a 30fps con límite térmico de 70°C
+
+```bash
+./install.sh -u nicolasrt -s 1280x720 -f 30 -T 70
+```
+
+---
+
+## 📊 Parámetros Disponibles
+
+| Flag | Descripción                                                   | Valor por defecto                 |
+| ---- | ------------------------------------------------------------- | --------------------------------- |
+| -u   | Usuario del sistema que ejecutará el servicio                 | nicolasrt                         |
+| -m   | Modo de transmisión (RTMP o UDP)                              | RTMP                              |
+| -n   | Nombre del dispositivo de audio (ALSA)                        | USB3.0 Video                      |
+| -i   | Host/IP de destino (solo para modo UDP)                       | localhost                         |
+| -r   | URL del servidor RTMP local                                   | rtmp://localhost:1935/live/stream |
+| -v   | Ruta del dispositivo de video                                 | /dev/video0                       |
+| -b   | ID del Bus USB para reset (Bus-Puerto)                        | 5-1                               |
+| -s   | Resolución de video (Ancho x Alto)                            | 1920x1080                         |
+| -f   | Cuadros por segundo (FPS)                                     | 60                                |
+| -T   | Límite de temperatura de CPU (°C)                             | 75                                |
+| -H   | Token de Home Assistant para controles de canal (setup_pi_tv) | (vacío / opcional)                |
+| -I   | Tiempo de inactividad (segundos) para apagar el stream        | 300                               |
+| -S   | Servicio a detener si hay sobrecalentamiento o inactividad    | streaming-tv.service              |
+| -c   | Intervalo en segundos entre cada comprobación de espectadores | 30                                |
+
+---
+
+## 🛠️ Componentes Incluidos
+
+- **streaming-tv.sh**  
+  Realiza el mantenimiento del hardware (reset USB), detecta el audio y lanza la codificación FFmpeg.
+
+- **streaming-tv.service**  
+  Permite la gestión del stream como servicio de sistema desde Cockpit.
+
+- **thermal-monitor.sh**  
+  Script centinela que supervisa la temperatura y detiene el stream en caso de calor crítico.
+
+- **thermal-monitor.service**  
+  Mantiene el monitoreo térmico activo en segundo plano desde el arranque.
+
+- **idle-monitor.sh**
+  Script de eficiencia energética que consulta la API de MediaMTX. Si no detecta espectadores durante un tiempo determinado (parámetro -t), ordena el apagado automático del streaming.
+
+- **idle-monitor.service**
+  Servicio encargado de mantener la vigilancia de inactividad activa en segundo plano.
+
+- **docker-compose.yml**  
+  Define el contenedor MediaMTX para la distribución del flujo de video.
+
+- **install.sh**  
+  Automatiza dependencias, permisos y despliega los archivos en sus rutas correctas.
+
+- **ha-script-run.sh**
+  Wrapper de integración con Home Assistant para ejecutar scripts (`script.turn_on`) usando token en `/etc/ha-token` (por defecto usa `http://localhost:8123`).
+
+---
+
+## 📱 Control y Visualización
+
+| Función        | Método / URL                                                     |
+| -------------- | ---------------------------------------------------------------- |
+| Control On/Off | Cockpit en https://IP_DE_LA_PI:9090                              |
+| Ver en Web     | http://IP_DE_LA_PI:8889/live/stream (WebRTC)                     |
+| Ver en VLC     | rtmp://IP_DE_LA_PI:1935/live/stream                              |
+| Ver en ffplay  | ffplay -i "rtmp://IP_DE_LA_PI:1935/live/stream" -fflags nobuffer |
+
+---
+
+## 🔧 Gestión del Sistema
+
+### Ver logs en tiempo real
+
+```bash
 journalctl -u streaming-tv.service -f
+```
 
-# Reiniciar streaming
+### Reiniciar manualmente el stream
+
+```bash
 sudo systemctl restart streaming-tv.service
+```
 
-# Estado de MediaMTX
+### Verificar estado de MediaMTX
+
+```bash
 sudo docker ps
+```
 
-# Diagnóstico de hardware
-v4l2-ctl --list-devices
-arecord -l
+### Diagnóstico de hardware
 
-# Ver configuración activa
-cat /etc/streaming-pi/config.env
+```bash
+v4l2-ctl --list-devices y arecord -l
 ```

@@ -3,9 +3,8 @@ Description=Monitor Termico para Raspberry Pi 5
 After=network.target
 
 [Service]
-ExecStart=__INSTALL_DIR__/bin/thermal-monitor.sh
+ExecStart=/home/nicolasrt/thermal-monitor.sh -t 75 -s streaming-tv.service -i 10
 Restart=always
-RestartSec=10
 User=root
 
 [Install]

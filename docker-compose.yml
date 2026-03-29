@@ -1,18 +1,10 @@
 services:
   mediamtx:
-    image: bluenviron/mediamtx:latest
+    image: bluenviron/mediamtx
     container_name: mediamtx
     restart: always
-    env_file:
-      - ./config/default.env
     ports:
-      - "${RTMP_PORT:-1935}:1935"   # RTMP
-      - "${HLS_PORT:-8888}:8888"    # HLS
-      - "${WEBRTC_PORT:-8889}:8889" # WebRTC
-      - "${RTSP_PORT:-8554}:8554"   # RTSP
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8888", "||", "exit", "1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+      - "1935:1935" # RTMP (Entrada de la Pi)
+      - "8888:8888" # HLS (Visualización web compatible)
+      - "8889:8889" # WebRTC (Visualización web latencia cero)
+      - "8554:8554" # RTSP
