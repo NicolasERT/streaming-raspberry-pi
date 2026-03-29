@@ -1,13 +1,13 @@
 [Unit]
 Description=Streaming Video y Audio FFmpeg
-After=network.target
+After=network.target docker.service
+Requires=docker.service
 
 [Service]
-ExecStart=/home/nicolasrt/streaming-tv.sh
+ExecStart=__INSTALL_DIR__/bin/streaming-tv.sh
 Restart=always
 RestartSec=5
-User=nicolasrt
+User=__USER_NAME__
 
 [Install]
 WantedBy=multi-user.target
-

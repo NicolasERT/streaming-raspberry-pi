@@ -1,7 +1,11 @@
 const SERVICE_NAME = "streaming-tv.service";
 const SERVICE_FILE = "/etc/systemd/system/streaming-tv.service";
 const HA_WRAPPER = "/usr/local/bin/ha-script-run.sh";
-const STREAM_PORT = "8888";
+const CONFIG_FILE = "/etc/streaming-pi/cockpit-config.json";
+
+// Defaults que se sobreescriben al cargar la configuración
+let STREAM_PORT = "8888";
+let sceneButtons = [];
 
 const RESOLUTION_PRESETS = {
   "1920x1080|60": { size: "1920x1080", fps: "60", label: "1080p" },
@@ -19,24 +23,59 @@ const btnStart = document.getElementById("btn-start");
 const btnStop = document.getElementById("btn-stop");
 const resolutionSelect = document.getElementById("resolution-select");
 
-const sceneButtons = [
-  { id: "btn-ch-up", entityId: "scene.subir_canal_tv", label: "Subir canal" },
-  { id: "btn-ch-down", entityId: "scene.bajar_canal_tv", label: "Bajar canal" },
-  { id: "btn-scene-up", entityId: "scene.arriba_tv", label: "Arriba" },
-  { id: "btn-scene-down", entityId: "scene.abajo_tv", label: "Abajo" },
-  { id: "btn-scene-left", entityId: "scene.izquierda_tv", label: "Izquierda" },
-  { id: "btn-scene-right", entityId: "scene.derecha_tv", label: "Derecha" },
-  { id: "btn-scene-guide", entityId: "scene.guia_tv", label: "Guia" },
-  { id: "btn-scene-ok", entityId: "scene.ok_tv", label: "OK" },
-  { id: "btn-scene-language", entityId: "scene.idioma_tv", label: "Idioma" },
-  { id: "btn-scene-subtitle", entityId: "scene.subtitulos_tv", label: "Subtitulo" }
-];
+let sceneElements = [];
+let allControls = [btnStart, btnStop, resolutionSelect];
 
-const sceneElements = sceneButtons
-  .map((item) => ({ ...item, element: document.getElementById(item.id) }))
-  .filter((item) => item.element);
+function loadConfig() {
+  return cockpit
+    .file(CONFIG_FILE)
+    .read()
+    .then((content) => {
+      if (!content) return;
+      const cfg = JSON.parse(content);
+      if (cfg.hlsPort) STREAM_PORT = String(cfg.hlsPort);
+      if (Array.isArray(cfg.haEntities)) {
+        sceneButtons = cfg.haEntities
+          .map((entityId) => {
+            const name = entityId.replace(/^scene\./, "").replace(/^script\./, "").replace(/_tv$/, "").replace(/_/g, " ");
+            const label = name.charAt(0).toUpperCase() + name.slice(1);
+            // Buscar botón existente en el DOM por entity_id
+            const el = document.querySelector(`[data-entity="${entityId}"]`);
+            return el ? { element: el, entityId, label } : null;
+          })
+          .filter(Boolean);
+      }
+    })
+    .catch(() => {
+      // Sin config JSON; usar defaults del DOM
+    });
+}
 
-const allControls = [btnStart, btnStop, resolutionSelect, ...sceneElements.map((item) => item.element)];
+function buildSceneElements() {
+  const defaultSceneButtons = [
+    { id: "btn-ch-up", entityId: "scene.subir_canal_tv", label: "Subir canal" },
+    { id: "btn-ch-down", entityId: "scene.bajar_canal_tv", label: "Bajar canal" },
+    { id: "btn-scene-up", entityId: "scene.arriba_tv", label: "Arriba" },
+    { id: "btn-scene-down", entityId: "scene.abajo_tv", label: "Abajo" },
+    { id: "btn-scene-left", entityId: "scene.izquierda_tv", label: "Izquierda" },
+    { id: "btn-scene-right", entityId: "scene.derecha_tv", label: "Derecha" },
+    { id: "btn-scene-guide", entityId: "scene.guia_tv", label: "Guia" },
+    { id: "btn-scene-ok", entityId: "scene.ok_tv", label: "OK" },
+    { id: "btn-scene-language", entityId: "scene.idioma_tv", label: "Idioma" },
+    { id: "btn-scene-subtitle", entityId: "scene.subtitulos_tv", label: "Subtitulo" }
+  ];
+
+  // Si se cargaron entidades del config, usar sceneButtons; si no, usar defaults del DOM
+  if (sceneButtons.length > 0) {
+    sceneElements = sceneButtons;
+  } else {
+    sceneElements = defaultSceneButtons
+      .map((item) => ({ ...item, element: document.getElementById(item.id) }))
+      .filter((item) => item.element);
+  }
+
+  allControls = [btnStart, btnStop, resolutionSelect, ...sceneElements.map((item) => item.element)];
+}
 
 function setActionButtonsVisibility(state) {
   const isActive = state === "active";
@@ -283,6 +322,10 @@ function initEvents() {
 cockpit
   .init()
   .then(() => {
+    return loadConfig();
+  })
+  .then(() => {
+    buildSceneElements();
     initEvents();
     return Promise.all([checkStatus(), applyCurrentResolutionSelection()]);
   })
