@@ -136,7 +136,7 @@ function checkStatus() {
 
 function checkFunnelStatus() {
   return cockpit
-    .spawn(["tailscale", "funnel", "status"], { superuser: "require", err: "ignore" })
+    .spawn(["sudo", "tailscale", "funnel", "status"], { superuser: "require", err: "ignore" })
     .then((output) => {
       const isActive = output.includes(STREAM_PORT);
       funnelActive = isActive;
@@ -146,10 +146,11 @@ function checkFunnelStatus() {
       funnelToggleBtn.textContent = isActive ? "Detener exposición" : "Exponer por Tailscale";
 
       if (isActive) {
-        const urlMatch = output.match(/^https:\/\/[^\s]+/m);
-        if (urlMatch) {
-          funnelUrl.textContent = urlMatch[0];
-          funnelUrl.href = urlMatch[0];
+        const baseMatch = output.match(/^(https:\/\/[^\s\/]+)/m);
+        if (baseMatch) {
+          const streamUrl = baseMatch[1] + "/live/stream/?muted=false";
+          funnelUrl.textContent = streamUrl;
+          funnelUrl.href = streamUrl;
           funnelUrl.style.display = "";
         } else {
           funnelUrl.style.display = "none";
@@ -174,8 +175,8 @@ function toggleFunnel() {
   setMessage(wasActive ? "Deteniendo exposición..." : "Activando Tailscale Funnel...", "muted");
 
   const args = wasActive
-    ? ["tailscale", "funnel", "off"]
-    : ["tailscale", "funnel", "--bg", STREAM_PORT];
+    ? ["sudo", "tailscale", "funnel", "off"]
+    : ["sudo", "tailscale", "funnel", "--bg", STREAM_PORT];
 
   return cockpit
     .spawn(args, { superuser: "require", err: "message" })
