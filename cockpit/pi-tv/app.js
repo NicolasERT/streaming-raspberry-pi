@@ -19,6 +19,13 @@ const btnStart = document.getElementById("btn-start");
 const btnStop = document.getElementById("btn-stop");
 const resolutionSelect = document.getElementById("resolution-select");
 
+const funnelStatusDot = document.getElementById("funnel-status-dot");
+const funnelStatusText = document.getElementById("funnel-status-text");
+const funnelUrl = document.getElementById("funnel-url");
+const funnelToggleBtn = document.getElementById("funnel-toggle-btn");
+
+let funnelActive = false;
+
 const sceneButtons = [
   { id: "btn-ch-up", entityId: "scene.subir_canal_tv", label: "Subir canal" },
   { id: "btn-ch-down", entityId: "scene.bajar_canal_tv", label: "Bajar canal" },
@@ -36,7 +43,7 @@ const sceneElements = sceneButtons
   .map((item) => ({ ...item, element: document.getElementById(item.id) }))
   .filter((item) => item.element);
 
-const allControls = [btnStart, btnStop, resolutionSelect, ...sceneElements.map((item) => item.element)];
+const allControls = [btnStart, btnStop, resolutionSelect, funnelToggleBtn, ...sceneElements.map((item) => item.element)];
 
 function setActionButtonsVisibility(state) {
   const isActive = state === "active";
@@ -124,6 +131,66 @@ function checkStatus() {
       setServiceState("unknown");
       setActionButtonsVisibility("unknown");
       return "unknown";
+    });
+}
+
+function checkFunnelStatus() {
+  return cockpit
+    .spawn(["tailscale", "funnel", "status"], { superuser: "require", err: "ignore" })
+    .then((output) => {
+      const isActive = output.includes(STREAM_PORT);
+      funnelActive = isActive;
+      funnelStatusDot.className = "status-dot " + (isActive ? "is-active" : "is-inactive");
+      funnelStatusText.textContent = isActive ? "Activo" : "Inactivo";
+      funnelToggleBtn.disabled = false;
+      funnelToggleBtn.textContent = isActive ? "Detener exposición" : "Exponer por Tailscale";
+
+      if (isActive) {
+        const urlMatch = output.match(/^https:\/\/[^\s]+/m);
+        if (urlMatch) {
+          funnelUrl.textContent = urlMatch[0];
+          funnelUrl.href = urlMatch[0];
+          funnelUrl.style.display = "";
+        } else {
+          funnelUrl.style.display = "none";
+        }
+      } else {
+        funnelUrl.style.display = "none";
+      }
+    })
+    .catch(() => {
+      funnelActive = false;
+      funnelStatusDot.className = "status-dot is-unknown";
+      funnelStatusText.textContent = "No disponible";
+      funnelToggleBtn.disabled = true;
+      funnelToggleBtn.textContent = "Exponer por Tailscale";
+      funnelUrl.style.display = "none";
+    });
+}
+
+function toggleFunnel() {
+  const wasActive = funnelActive;
+  setBusy(true);
+  setMessage(wasActive ? "Deteniendo exposición..." : "Activando Tailscale Funnel...", "muted");
+
+  const args = wasActive
+    ? ["tailscale", "funnel", "off"]
+    : ["tailscale", "funnel", "--bg", STREAM_PORT];
+
+  return cockpit
+    .spawn(args, { superuser: "require", err: "message" })
+    .then(() => {
+      setMessage(
+        wasActive ? "Exposición detenida" : `Puerto ${STREAM_PORT} expuesto por Tailscale`,
+        "success"
+      );
+    })
+    .catch((error) => {
+      setMessage(`Error: ${parseError(error)}`, "error");
+    })
+    .finally(() => {
+      setBusy(false);
+      checkFunnelStatus();
     });
 }
 
@@ -273,9 +340,14 @@ function initEvents() {
     });
   });
 
+  funnelToggleBtn.addEventListener("click", () => {
+    toggleFunnel().catch(() => {});
+  });
+
   cockpit.addEventListener("visibilitychange", () => {
     if (!cockpit.hidden) {
       checkStatus();
+      checkFunnelStatus();
     }
   });
 }
@@ -284,7 +356,7 @@ cockpit
   .init()
   .then(() => {
     initEvents();
-    return Promise.all([checkStatus(), applyCurrentResolutionSelection()]);
+    return Promise.all([checkStatus(), applyCurrentResolutionSelection(), checkFunnelStatus()]);
   })
   .then(() => {
     setMessage("Conectado a Cockpit", "muted");

@@ -64,6 +64,15 @@
             </select>
           </div>
 
+          <div class="funnel-section">
+            <div class="funnel-status-row">
+              <span id="funnel-status-dot" class="status-dot is-unknown" aria-hidden="true"></span>
+              <span id="funnel-status-text">Tailscale: consultando...</span>
+            </div>
+            <a id="funnel-url" class="funnel-url" href="#" target="_blank" rel="noopener noreferrer" style="display:none"></a>
+            <button id="funnel-toggle-btn" class="btn btn-funnel" type="button">Exponer por Tailscale</button>
+          </div>
+
           <section class="feedback" aria-live="polite">
             <p id="message" class="message is-muted">Listo.</p>
           </section>
