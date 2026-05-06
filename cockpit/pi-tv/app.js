@@ -57,7 +57,7 @@ function getStreamHost() {
 }
 
 function getStreamUrl() {
-  return `http://${getStreamHost()}:${STREAM_PORT}/live/stream/`;
+  return `http://${getStreamHost()}:${STREAM_PORT}/live/stream?muted=false`;
 }
 
 function setBusy(isBusy) {
