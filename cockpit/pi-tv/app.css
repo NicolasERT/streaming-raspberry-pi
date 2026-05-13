@@ -208,12 +208,12 @@ body {
   color: #fff;
 }
 
-.btn-funnel {
-  background: #6366f1;
+.btn-vdoninja {
+  background: #0f766e;
   color: #fff;
 }
 
-.funnel-section {
+.vdoninja-section {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -221,26 +221,42 @@ body {
   border-top: 1px solid #667085;
 }
 
-.funnel-status-row {
+.vdoninja-status-row {
   display: flex;
   align-items: center;
   gap: 8px;
   font-weight: 600;
 }
 
-.funnel-url {
+.vdoninja-url {
   display: block;
   font-family: ui-monospace, SFMono-Regular, monospace;
   font-size: 0.78rem;
-  color: #6366f1;
+  color: #0f766e;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   text-decoration: none;
 }
 
-.funnel-url:hover {
+.vdoninja-url:hover {
   text-decoration: underline;
+}
+
+.vdoninja-password-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+}
+
+.vdoninja-password-input {
+  width: 100%;
+  border: 1px solid #6b7280;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.875rem;
+  background: Canvas;
+  color: CanvasText;
 }
 
 .feedback {
