@@ -13,27 +13,6 @@ RTSP_URL="rtsp://localhost:8554/live/stream"
 WHIP_BASE="https://whip.vdo.ninja"
 
 # ==============================================================================
-# SELECCIÓN DE BINARIO FFMPEG CON SOPORTE WHIP
-# ==============================================================================
-FFMPEG_BIN=""
-for candidate in "/usr/lib/jellyfin-ffmpeg/ffmpeg" "ffmpeg"; do
-    if command -v "$candidate" &>/dev/null || [ -x "$candidate" ]; then
-        if "$candidate" -muxers 2>/dev/null | grep -qi 'whip'; then
-            FFMPEG_BIN="$candidate"
-            break
-        fi
-    fi
-done
-
-if [ -z "$FFMPEG_BIN" ]; then
-    echo "❌ No se encontró FFmpeg con soporte WHIP."
-    echo "   Instala jellyfin-ffmpeg: https://github.com/jellyfin/jellyfin-ffmpeg/releases"
-    exit 1
-fi
-
-echo "✅ Usando FFmpeg: $FFMPEG_BIN"
-
-# ==============================================================================
 # PREPARACIÓN
 # ==============================================================================
 # PASSWORD viene de EnvironmentFile=/etc/vdoninja.conf vía systemd
@@ -76,7 +55,7 @@ trap cleanup SIGINT SIGTERM EXIT
 # PUBLICACIÓN VÍA WHIP
 # ==============================================================================
 echo "📡 Publicando a VDO.Ninja vía WHIP..."
-"$FFMPEG_BIN" -loglevel warning \
+ffmpeg -loglevel warning \
     -rtsp_transport tcp \
     -i "$RTSP_URL" \
     -c:v copy \
