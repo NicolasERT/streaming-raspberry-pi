@@ -84,6 +84,18 @@ install_if_missing "docker" "docker.io"
 install_if_missing "jq" "jq"
 install_if_missing "curl" "curl"
 
+# Jellyfin FFmpeg (incluye soporte WHIP para VDO.Ninja, convive con el ffmpeg del sistema)
+if [ ! -x "/usr/lib/jellyfin-ffmpeg/ffmpeg" ]; then
+    echo "📦 Instalando jellyfin-ffmpeg (requerido para VDO.Ninja vía WHIP)..."
+    curl -fsSL https://repo.jellyfin.org/debian/jellyfin_team.gpg.key \
+        | sudo gpg --dearmor -o /usr/share/keyrings/jellyfin.gpg
+    echo "deb [signed-by=/usr/share/keyrings/jellyfin.gpg] https://repo.jellyfin.org/debian bookworm main" \
+        | sudo tee /etc/apt/sources.list.d/jellyfin.list > /dev/null
+    sudo apt update && sudo apt install -y jellyfin-ffmpeg7
+else
+    echo "✅ jellyfin-ffmpeg ya está instalado."
+fi
+
 if ! docker compose version &> /dev/null; then
     echo "📦 Instalando Docker Compose Plugin..."
     sudo apt update && sudo apt install -y docker-compose-v2
