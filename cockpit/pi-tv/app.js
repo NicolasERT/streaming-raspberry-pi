@@ -1,10 +1,7 @@
 const SERVICE_NAME = "streaming-tv.service";
 const SERVICE_FILE = "/etc/systemd/system/streaming-tv.service";
 const HA_WRAPPER = "/usr/local/bin/ha-script-run.sh";
-const VDONINJA_CONFIG = "/etc/vdoninja.conf";
-const VDONINJA_SESSION = "/run/vdoninja-publisher/session.conf";
-const VDONINJA_SERVICE = "vdoninja-publisher.service";
-const HLS_PORT = "8888";
+const STREAM_PORT = "8888";
 
 const RESOLUTION_PRESETS = {
   "1920x1080|60": { size: "1920x1080", fps: "60", label: "1080p" },
@@ -22,15 +19,12 @@ const btnStart = document.getElementById("btn-start");
 const btnStop = document.getElementById("btn-stop");
 const resolutionSelect = document.getElementById("resolution-select");
 
-const vdoNinjaStatusDot = document.getElementById("vdoninja-status-dot");
-const vdoNinjaStatusText = document.getElementById("vdoninja-status-text");
-const vdoNinjaUrl = document.getElementById("vdoninja-url");
-const vdoNinjaToggleBtn = document.getElementById("vdoninja-toggle-btn");
-const vdoNinjaPasswordInput = document.getElementById("vdoninja-password-input");
-const vdoNinjaSavePasswordBtn = document.getElementById("vdoninja-save-password-btn");
-const vdoNinjaCopyBtn = document.getElementById("vdoninja-copy-btn");
+const funnelStatusDot = document.getElementById("funnel-status-dot");
+const funnelStatusText = document.getElementById("funnel-status-text");
+const funnelUrl = document.getElementById("funnel-url");
+const funnelToggleBtn = document.getElementById("funnel-toggle-btn");
 
-let vdoNinjaActive = false;
+let funnelActive = false;
 
 const sceneButtons = [
   { id: "btn-ch-up", entityId: "scene.subir_canal_tv", label: "Subir canal" },
@@ -49,7 +43,7 @@ const sceneElements = sceneButtons
   .map((item) => ({ ...item, element: document.getElementById(item.id) }))
   .filter((item) => item.element);
 
-const allControls = [btnStart, btnStop, resolutionSelect, vdoNinjaToggleBtn, vdoNinjaPasswordInput, vdoNinjaSavePasswordBtn, vdoNinjaCopyBtn, ...sceneElements.map((item) => item.element)];
+const allControls = [btnStart, btnStop, resolutionSelect, funnelToggleBtn, ...sceneElements.map((item) => item.element)];
 
 function setActionButtonsVisibility(state) {
   const isActive = state === "active";
@@ -70,7 +64,7 @@ function getStreamHost() {
 }
 
 function getStreamUrl() {
-  return `http://${getStreamHost()}:${HLS_PORT}/live/stream?muted=false`;
+  return `http://${getStreamHost()}:${STREAM_PORT}/live/stream?muted=false`;
 }
 
 function setBusy(isBusy) {
@@ -140,111 +134,64 @@ function checkStatus() {
     });
 }
 
-function readVdoNinjaPassword() {
+function checkFunnelStatus() {
   return cockpit
-    .script(`grep '^PASSWORD=' '${VDONINJA_CONFIG}' | cut -d= -f2`, [], { superuser: "require", err: "ignore" })
-    .then((output) => output.trim())
-    .catch(() => "");
-}
-
-function checkVdoNinjaStatus() {
-  return cockpit
-    .spawn(["systemctl", "is-active", VDONINJA_SERVICE], { err: "ignore" })
+    .spawn(["sudo", "tailscale", "funnel", "status"], { superuser: "require", err: "ignore" })
     .then((output) => {
-      const isActive = output.trim() === "active";
-      vdoNinjaActive = isActive;
-      vdoNinjaStatusDot.className = "status-dot " + (isActive ? "is-active" : "is-inactive");
-      vdoNinjaStatusText.textContent = isActive ? "VDO.Ninja: activo" : "VDO.Ninja: detenido";
-      vdoNinjaToggleBtn.textContent = isActive ? "Detener VDO.Ninja" : "Iniciar VDO.Ninja";
+      const isActive = output.includes(STREAM_PORT);
+      funnelActive = isActive;
+      funnelStatusDot.className = "status-dot " + (isActive ? "is-active" : "is-inactive");
+      funnelStatusText.textContent = isActive ? "Activo" : "Inactivo";
+      funnelToggleBtn.disabled = false;
+      funnelToggleBtn.textContent = isActive ? "Detener exposición" : "Exponer por Tailscale";
 
-      if (!isActive) {
-        vdoNinjaUrl.style.display = "none";
-        vdoNinjaCopyBtn.style.display = "none";
-        return;
+      if (isActive) {
+        const baseMatch = output.match(/^(https:\/\/[^\s\/]+)/m);
+        if (baseMatch) {
+          const streamUrl = baseMatch[1] + "/live/stream/?muted=false";
+          funnelUrl.textContent = streamUrl;
+          funnelUrl.href = streamUrl;
+          funnelUrl.style.display = "";
+        } else {
+          funnelUrl.style.display = "none";
+        }
+      } else {
+        funnelUrl.style.display = "none";
       }
-
-      return Promise.all([
-        cockpit.spawn(["cat", VDONINJA_SESSION], { err: "ignore" }).catch(() => ""),
-        readVdoNinjaPassword()
-      ]).then(([sessionData, password]) => {
-        const streamIdMatch = sessionData.match(/^STREAM_ID=(.+)$/m);
-        if (!streamIdMatch) {
-          vdoNinjaUrl.style.display = "none";
-          vdoNinjaCopyBtn.style.display = "none";
-          return;
-        }
-        const streamId = streamIdMatch[1].trim();
-        let viewerUrl = `https://vdo.ninja/?view=${streamId}`;
-        if (password) {
-          viewerUrl += `&password=${encodeURIComponent(password)}`;
-        }
-        vdoNinjaUrl.textContent = viewerUrl;
-        vdoNinjaUrl.href = viewerUrl;
-        vdoNinjaUrl.style.display = "";
-        vdoNinjaCopyBtn.style.display = "";
-      });
     })
     .catch(() => {
-      vdoNinjaActive = false;
-      vdoNinjaStatusDot.className = "status-dot is-unknown";
-      vdoNinjaStatusText.textContent = "VDO.Ninja: desconocido";
-      vdoNinjaToggleBtn.textContent = "Iniciar VDO.Ninja";
-      vdoNinjaUrl.style.display = "none";
-      vdoNinjaCopyBtn.style.display = "none";
+      funnelActive = false;
+      funnelStatusDot.className = "status-dot is-unknown";
+      funnelStatusText.textContent = "No disponible";
+      funnelToggleBtn.disabled = true;
+      funnelToggleBtn.textContent = "Exponer por Tailscale";
+      funnelUrl.style.display = "none";
     });
 }
 
-function toggleVdoNinja() {
-  const wasActive = vdoNinjaActive;
+function toggleFunnel() {
+  const wasActive = funnelActive;
   setBusy(true);
-  setMessage(wasActive ? "Deteniendo VDO.Ninja..." : "Iniciando VDO.Ninja...", "muted");
+  setMessage(wasActive ? "Deteniendo exposición..." : "Activando Tailscale Funnel...", "muted");
 
   const args = wasActive
-    ? ["systemctl", "stop", VDONINJA_SERVICE]
-    : ["systemctl", "start", VDONINJA_SERVICE];
+    ? ["sudo", "tailscale", "funnel", "off"]
+    : ["sudo", "tailscale", "funnel", "--bg", STREAM_PORT];
 
   return cockpit
     .spawn(args, { superuser: "require", err: "message" })
     .then(() => {
-      setMessage(wasActive ? "VDO.Ninja detenido" : "VDO.Ninja iniciado", "success");
+      setMessage(
+        wasActive ? "Exposición detenida" : `Puerto ${STREAM_PORT} expuesto por Tailscale`,
+        "success"
+      );
     })
     .catch((error) => {
       setMessage(`Error: ${parseError(error)}`, "error");
     })
     .finally(() => {
       setBusy(false);
-      setTimeout(() => checkVdoNinjaStatus(), wasActive ? 0 : 2000);
-    });
-}
-
-function loadVdoNinjaPassword() {
-  return readVdoNinjaPassword().then((password) => {
-    vdoNinjaPasswordInput.value = password;
-  });
-}
-
-function saveVdoNinjaPasswordScript(password) {
-  const escaped = password.replace(/'/g, "'\\'' ");
-  return `set -eu
-printf 'PASSWORD=%s\\n' '${escaped}' > /etc/vdoninja.conf
-chmod 640 /etc/vdoninja.conf`;
-}
-
-function saveVdoNinjaPassword() {
-  const password = vdoNinjaPasswordInput.value.trim();
-  setBusy(true);
-  setMessage("Guardando contraseña...", "muted");
-
-  return cockpit
-    .script(saveVdoNinjaPasswordScript(password), [], { superuser: "require", err: "message" })
-    .then(() => {
-      setMessage("Contraseña guardada. Reinicia VDO.Ninja para aplicar.", "success");
-    })
-    .catch((error) => {
-      setMessage(`Error: ${parseError(error)}`, "error");
-    })
-    .finally(() => {
-      setBusy(false);
+      checkFunnelStatus();
     });
 }
 
@@ -394,27 +341,14 @@ function initEvents() {
     });
   });
 
-  vdoNinjaToggleBtn.addEventListener("click", () => {
-    toggleVdoNinja().catch(() => {});
-  });
-
-  vdoNinjaSavePasswordBtn.addEventListener("click", () => {
-    saveVdoNinjaPassword().catch(() => {});
-  });
-
-  vdoNinjaCopyBtn.addEventListener("click", () => {
-    const url = vdoNinjaUrl.href;
-    if (url && url !== "#") {
-      navigator.clipboard.writeText(url)
-        .then(() => setMessage("Enlace copiado al portapapeles", "success"))
-        .catch(() => setMessage("No se pudo copiar el enlace", "error"));
-    }
+  funnelToggleBtn.addEventListener("click", () => {
+    toggleFunnel().catch(() => {});
   });
 
   cockpit.addEventListener("visibilitychange", () => {
     if (!cockpit.hidden) {
       checkStatus();
-      checkVdoNinjaStatus();
+      checkFunnelStatus();
     }
   });
 }
@@ -423,7 +357,7 @@ cockpit
   .init()
   .then(() => {
     initEvents();
-    return Promise.all([checkStatus(), applyCurrentResolutionSelection(), checkVdoNinjaStatus(), loadVdoNinjaPassword()]);
+    return Promise.all([checkStatus(), applyCurrentResolutionSelection(), checkFunnelStatus()]);
   })
   .then(() => {
     setMessage("Conectado a Cockpit", "muted");

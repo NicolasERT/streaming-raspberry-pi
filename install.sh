@@ -27,13 +27,10 @@ IDLE_TIME="300"
 IDLE_CHECK_INTERVAL="30"
 MONITOR_SERVICE="streaming-tv.service"
 
-# Parámetros VDO.Ninja
-VDONINJA_PASSWORD=""
-
 # ==============================================================================
 # PROCESAMIENTO DE PARÁMETROS NOMBRADOS
 # ==============================================================================
-while getopts "u:m:n:i:r:v:b:s:f:T:I:S:c:H:E:P:C:w:" opt; do
+while getopts "u:m:n:i:r:v:b:s:f:T:I:S:c:H:E:P:C:" opt; do
   case $opt in
     u) USER_NAME="$OPTARG" ;;
     m) MODO="$OPTARG" ;;
@@ -52,7 +49,6 @@ while getopts "u:m:n:i:r:v:b:s:f:T:I:S:c:H:E:P:C:w:" opt; do
     E) TUYA_ENTRY_ID="$OPTARG" ;;  # Config entry id de Tuya
     P) PLUGIN_SRC="$OPTARG" ;;     # Ruta fuente plugin Cockpit
     C) COCKPIT_DIR="$OPTARG" ;;    # Ruta destino plugin Cockpit
-    w) VDONINJA_PASSWORD="$OPTARG" ;; # Contraseña VDO.Ninja
     \?) echo "Uso: ./install.sh [opciones]"; exit 1 ;;
   esac
 done
@@ -94,7 +90,7 @@ sudo usermod -aG docker "$USER_NAME"
 # ==============================================================================
 # 2. CONFIGURACIÓN DE SCRIPTS
 # ==============================================================================
-for script in "streaming-tv.sh" "thermal-monitor.sh" "idle-monitor.sh" "vdoninja-publisher.sh"; do
+for script in "streaming-tv.sh" "thermal-monitor.sh" "idle-monitor.sh"; do
     if [ -f "$REPO_DIR/scripts/$script" ]; then
         echo "📜 Configurando $script..."
         cp "$REPO_DIR/scripts/$script" "$INSTALL_DIR/"
@@ -130,16 +126,6 @@ if [ -n "$HA_TOKEN" ]; then
     sudo chown root:root /etc/ha-token
     sudo chmod 600 /etc/ha-token
 fi
-
-# Configurar /etc/vdoninja.conf con contraseña inicial
-echo "🔐 Configurando VDO.Ninja..."
-if [ -z "$VDONINJA_PASSWORD" ]; then
-    VDONINJA_PASSWORD=$(openssl rand -hex 8)
-    echo "🎲 Contraseña VDO.Ninja generada automáticamente: $VDONINJA_PASSWORD"
-fi
-printf 'PASSWORD=%s\n' "$VDONINJA_PASSWORD" | sudo tee /etc/vdoninja.conf >/dev/null
-sudo chown root:"$USER_NAME" /etc/vdoninja.conf
-sudo chmod 640 /etc/vdoninja.conf
 
 # ==============================================================================
 # 3. CONFIGURACIÓN DE DOCKER (MediaMTX)
@@ -184,14 +170,6 @@ if [ -f "$REPO_DIR/services/idle-monitor.service" ]; then
     # Deshabilitado hasta que funcione correctamente
     sudo systemctl disable idle-monitor.service
     sudo systemctl stop idle-monitor.service
-fi
-
-# vdoninja-publisher.service
-if [ -f "$REPO_DIR/services/vdoninja-publisher.service" ]; then
-    sudo cp "$REPO_DIR/services/vdoninja-publisher.service" /etc/systemd/system/
-    sudo sed -i "s/User=.*/User=$USER_NAME/" /etc/systemd/system/vdoninja-publisher.service
-    sudo sed -i "s|ExecStart=.*|ExecStart=$INSTALL_DIR/vdoninja-publisher.sh|" /etc/systemd/system/vdoninja-publisher.service
-    sudo systemctl enable vdoninja-publisher.service
 fi
 
 # ==============================================================================
