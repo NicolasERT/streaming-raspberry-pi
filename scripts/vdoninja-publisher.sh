@@ -76,5 +76,5 @@ docker run --rm --network host \
     -rtsp_transport tcp \
     -i "$RTSP_URL" \
     -c:v copy \
-    -c:a libopus -b:a 96k -ar 48000 -ac 2 \
+    -c:a libopus -b:a 96k -ar 48000 -ac 1 \
     -f whip "$WHIP_URL"
