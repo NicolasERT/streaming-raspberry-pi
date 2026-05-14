@@ -84,16 +84,19 @@ install_if_missing "docker" "docker.io"
 install_if_missing "jq" "jq"
 install_if_missing "curl" "curl"
 
-# Jellyfin FFmpeg (incluye soporte WHIP para VDO.Ninja, convive con el ffmpeg del sistema)
-if [ ! -x "/usr/lib/jellyfin-ffmpeg/ffmpeg" ]; then
-    echo "📦 Instalando jellyfin-ffmpeg (requerido para VDO.Ninja vía WHIP)..."
-    curl -fsSL https://repo.jellyfin.org/debian/jellyfin_team.gpg.key \
-        | sudo gpg --dearmor -o /usr/share/keyrings/jellyfin.gpg
-    echo "deb [signed-by=/usr/share/keyrings/jellyfin.gpg] https://repo.jellyfin.org/debian bookworm main" \
-        | sudo tee /etc/apt/sources.list.d/jellyfin.list > /dev/null
-    sudo apt update && sudo apt install -y jellyfin-ffmpeg7
+# FFmpeg estático con soporte WHIP (para VDO.Ninja, convive con el ffmpeg del sistema)
+FFMPEG_WHIP_BIN="/usr/local/bin/ffmpeg-whip"
+if [ ! -x "$FFMPEG_WHIP_BIN" ]; then
+    echo "📦 Descargando FFmpeg estático con soporte WHIP..."
+    TMP_DIR=$(mktemp -d)
+    curl -fsSL "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz" \
+        -o "$TMP_DIR/ffmpeg.tar.xz"
+    tar -xf "$TMP_DIR/ffmpeg.tar.xz" -C "$TMP_DIR" --strip-components=1
+    sudo install -m 755 "$TMP_DIR/ffmpeg" "$FFMPEG_WHIP_BIN"
+    rm -rf "$TMP_DIR"
+    echo "✅ FFmpeg estático instalado en $FFMPEG_WHIP_BIN"
 else
-    echo "✅ jellyfin-ffmpeg ya está instalado."
+    echo "✅ FFmpeg con WHIP ya instalado en $FFMPEG_WHIP_BIN"
 fi
 
 if ! docker compose version &> /dev/null; then
