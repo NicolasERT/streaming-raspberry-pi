@@ -12,20 +12,26 @@ VDONINJA_SESSION="$VDONINJA_SESSION_DIR/session.conf"
 RTSP_URL="rtsp://localhost:8554/live/stream"
 WHIP_BASE="https://whip.vdo.ninja"
 
-FFMPEG_DOCKER_IMAGE="linuxserver/ffmpeg"
+# ==============================================================================
+# SELECCIÓN DE BINARIO FFMPEG CON SOPORTE WHIP
+# ==============================================================================
+FFMPEG_BIN=""
+for candidate in "/usr/local/bin/ffmpeg-whip" "/usr/lib/jellyfin-ffmpeg/ffmpeg" "ffmpeg"; do
+    if command -v "$candidate" &>/dev/null || [ -x "$candidate" ]; then
+        if "$candidate" -muxers 2>/dev/null | grep -qi 'whip'; then
+            FFMPEG_BIN="$candidate"
+            break
+        fi
+    fi
+done
 
-# ==============================================================================
-# VALIDACIÓN DE DEPENDENCIAS
-# ==============================================================================
-if ! command -v docker &>/dev/null; then
-    echo "❌ Docker no está instalado o no está en el PATH."
+if [ -z "$FFMPEG_BIN" ]; then
+    echo "❌ No se encontró FFmpeg con soporte WHIP."
+    echo "   Instala jellyfin-ffmpeg: https://github.com/jellyfin/jellyfin-ffmpeg/releases"
     exit 1
 fi
 
-if ! docker image inspect "$FFMPEG_DOCKER_IMAGE" &>/dev/null; then
-    echo "📦 Descargando imagen $FFMPEG_DOCKER_IMAGE..."
-    docker pull "$FFMPEG_DOCKER_IMAGE"
-fi
+echo "✅ Usando FFmpeg: $FFMPEG_BIN"
 
 # ==============================================================================
 # PREPARACIÓN
@@ -70,9 +76,7 @@ trap cleanup SIGINT SIGTERM EXIT
 # PUBLICACIÓN VÍA WHIP
 # ==============================================================================
 echo "📡 Publicando a VDO.Ninja vía WHIP..."
-docker run --rm --network host \
-    "$FFMPEG_DOCKER_IMAGE" \
-    -loglevel warning \
+"$FFMPEG_BIN" -loglevel warning \
     -rtsp_transport tcp \
     -i "$RTSP_URL" \
     -c:v copy \
