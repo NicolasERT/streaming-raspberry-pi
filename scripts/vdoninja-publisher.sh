@@ -13,6 +13,15 @@ RTSP_URL="rtsp://localhost:8554/live/stream"
 WHIP_BASE="https://whip.vdo.ninja"
 
 # ==============================================================================
+# VALIDACIÓN DE DEPENDENCIAS
+# ==============================================================================
+if ! ffmpeg -muxers 2>/dev/null | grep -qi 'whip'; then
+    echo "❌ FFmpeg no incluye soporte WHIP (requiere FFmpeg 6.1+)."
+    echo "   Versión instalada: $(ffmpeg -version 2>&1 | head -n1)"
+    exit 1
+fi
+
+# ==============================================================================
 # PREPARACIÓN
 # ==============================================================================
 # PASSWORD viene de EnvironmentFile=/etc/vdoninja.conf vía systemd
