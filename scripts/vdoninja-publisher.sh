@@ -15,9 +15,10 @@ WHIP_BASE="https://whip.vdo.ninja"
 # ==============================================================================
 # VALIDACIÓN DE DEPENDENCIAS
 # ==============================================================================
-if ! ffmpeg -muxers 2>/dev/null | grep -qi 'whip'; then
+if ! ffmpeg -formats 2>/dev/null | grep -q 'whip'; then
     echo "❌ FFmpeg no incluye soporte WHIP (requiere FFmpeg 6.1+)."
-    echo "   Versión instalada: $(ffmpeg -version 2>&1 | head -n1)"
+    echo "   Instala jellyfin-ffmpeg u otra versión actualizada:"
+    echo "   https://github.com/jellyfin/jellyfin-ffmpeg/releases"
     exit 1
 fi
 
