@@ -16,7 +16,7 @@ WHIP_BASE="https://whip.vdo.ninja"
 # SELECCIÓN DE BINARIO FFMPEG CON SOPORTE WHIP
 # ==============================================================================
 FFMPEG_BIN=""
-for candidate in "/usr/local/bin/ffmpeg-whip" "/usr/lib/jellyfin-ffmpeg/ffmpeg" "ffmpeg"; do
+for candidate in "/usr/lib/jellyfin-ffmpeg/ffmpeg" "ffmpeg"; do
     if command -v "$candidate" &>/dev/null || [ -x "$candidate" ]; then
         if "$candidate" -muxers 2>/dev/null | grep -qi 'whip'; then
             FFMPEG_BIN="$candidate"
